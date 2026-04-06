@@ -21,4 +21,4 @@ aliyun:
 
 logging:
   file:
-    name: ./week02/project/repair-system/logs/app.log
+    name: ./backend/platform/logs/app.log
