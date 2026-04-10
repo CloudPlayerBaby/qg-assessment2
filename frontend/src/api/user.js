@@ -15,5 +15,28 @@ export const userApi = {
       method: 'post',
       data
     })
+  },
+
+  getUserInfo() {
+    return request({
+      url: '/user/info',
+      method: 'get'
+    })
+  },
+
+  updateProfile(data) {
+    return request({
+      url: '/user/profile',
+      method: 'patch',
+      data
+    })
+  },
+
+  updatePassword(data) {
+    return request({
+      url: '/user/password',
+      method: 'patch',
+      data
+    })
   }
 }

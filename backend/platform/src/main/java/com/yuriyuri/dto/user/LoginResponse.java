@@ -1,4 +1,4 @@
-package com.yuriyuri.dto;
+package com.yuriyuri.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

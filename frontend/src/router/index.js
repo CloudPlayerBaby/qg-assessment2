@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
@@ -28,6 +29,16 @@ const routes = [
         component: () => import('@/views/Publish.vue')
       },
       {
+        path: 'edit-lost',
+        name: 'EditLost',
+        component: () => import('@/views/EditLost.vue')
+      },
+      {
+        path: 'edit-found',
+        name: 'EditFound',
+        component: () => import('@/views/EditFound.vue')
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/views/Profile.vue')
@@ -41,24 +52,45 @@ const routes = [
         path: 'admin',
         name: 'Admin',
         component: () => import('@/views/admin/Index.vue'),
-        redirect: '/admin/users',
+        redirect: '/admin/user-manage',
+        meta: { requiresAdmin: true },
         children: [
           {
-            path: 'users',
-            name: 'AdminUsers',
-            component: () => import('@/views/admin/Users.vue')
+            path: 'user-manage',
+            name: 'UserManage',
+            component: () => import('@/views/admin/UserManage.vue'),
+            meta: { requiresAdmin: true }
           },
           {
-            path: 'posts',
-            name: 'AdminPosts',
-            component: () => import('@/views/admin/Posts.vue')
+            path: 'post-manage',
+            name: 'PostManage',
+            component: () => import('@/views/admin/PostManage.vue'),
+            meta: { requiresAdmin: true }
+          },
+          {
+            path: 'top-manage',
+            name: 'TopManage',
+            component: () => import('@/views/admin/Posts.vue'),
+            meta: { requiresAdmin: true }
+          },
+          {
+            path: 'report',
+            name: 'AdminReport',
+            component: () => import('@/views/admin/Report.vue'),
+            meta: { requiresAdmin: true }
           },
           {
             path: 'statistics',
             name: 'AdminStatistics',
-            component: () => import('@/views/admin/Statistics.vue')
+            component: () => import('@/views/admin/Statistics.vue'),
+            meta: { requiresAdmin: true }
           }
         ]
+      },
+      {
+        path: 'detail/:itemType/:id',
+        name: 'Detail',
+        component: () => import('@/views/Detail.vue')
       }
     ]
   }
@@ -70,9 +102,12 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  if (to.path !== '/login' && to.path !== '/register' && !token) {
+  const userStore = useUserStore()
+  
+  if (to.path !== '/login' && to.path !== '/register' && !userStore.token) {
     next('/login')
+  } else if (to.meta.requiresAdmin && !userStore.isAdmin()) {
+    next('/home')
   } else {
     next()
   }

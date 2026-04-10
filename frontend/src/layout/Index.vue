@@ -52,23 +52,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
-const userInfo = ref(null)
+const userInfo = computed(() => userStore.userInfo)
 
 const activeMenu = computed(() => route.path)
-
-onMounted(() => {
-  const savedUserInfo = localStorage.getItem('userInfo')
-  if (savedUserInfo) {
-    userInfo.value = JSON.parse(savedUserInfo)
-  }
-})
 
 const handleCommand = async (command) => {
   if (command === 'profile') {
@@ -82,8 +77,7 @@ const handleCommand = async (command) => {
         cancelButtonText: '取消',
         type: 'warning'
       })
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
+      userStore.logout()
       ElMessage.success('退出成功')
       router.push('/login')
     } catch {

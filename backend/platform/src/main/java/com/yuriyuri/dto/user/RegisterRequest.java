@@ -1,4 +1,4 @@
-package com.yuriyuri.dto;
+package com.yuriyuri.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
-
     @NotEmpty(message = "用户名不能为空")
     private String username;
 

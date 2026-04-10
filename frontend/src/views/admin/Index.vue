@@ -10,13 +10,21 @@
         router
         class="admin-menu"
       >
-        <el-menu-item index="/admin/users">
+        <el-menu-item index="/admin/user-manage">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
         </el-menu-item>
-        <el-menu-item index="/admin/posts">
+        <el-menu-item index="/admin/post-manage">
           <el-icon><Document /></el-icon>
           <span>信息管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/top-manage">
+          <el-icon><Document /></el-icon>
+          <span>置顶审核</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/report">
+          <el-icon><Warning /></el-icon>
+          <span>举报管理</span>
         </el-menu-item>
         <el-menu-item index="/admin/statistics">
           <el-icon><DataLine /></el-icon>
@@ -46,6 +54,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { Warning, User, Document } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const activeMenu = computed(() => route.path)
@@ -79,6 +88,23 @@ const activeMenu = computed(() => route.path)
 
 .admin-menu:not(.el-menu--collapse) {
   width: 220px;
+}
+
+.admin-menu :deep(.el-menu-item) {
+  color: #bfcbd9;
+}
+
+.admin-menu :deep(.el-menu-item.is-active) {
+  color: #409eff;
+  background-color: #263445;
+}
+
+.admin-menu :deep(.el-menu-item:hover) {
+  background-color: #263445;
+}
+
+.admin-menu :deep(.el-icon) {
+  color: inherit;
 }
 
 .admin-main-container {

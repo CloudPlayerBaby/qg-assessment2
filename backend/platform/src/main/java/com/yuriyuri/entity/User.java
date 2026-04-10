@@ -1,14 +1,14 @@
 package com.yuriyuri.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
 @TableName("sys_user")
 public class User {
-
-    @TableId(type = IdType.AUTO)
+    @TableId
     private Long id;
 
     private String username;

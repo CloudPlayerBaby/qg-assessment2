@@ -130,6 +130,10 @@ const locationData = ref([
 </script>
 
 <style scoped>
+.statistics-container {
+  width: 100%;
+}
+
 .stat-card {
   cursor: pointer;
   transition: all 0.3s;

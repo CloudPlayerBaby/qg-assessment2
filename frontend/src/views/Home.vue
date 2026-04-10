@@ -8,6 +8,7 @@
           size="large"
           clearable
           class="search-input"
+          @keyup.enter="handleSearch"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
@@ -20,11 +21,7 @@
           <el-option label="图书馆" value="图书馆" />
           <el-option label="宿舍" value="宿舍" />
           <el-option label="操场" value="操场" />
-        </el-select>
-        <el-select v-model="searchType" placeholder="选择类型" clearable size="large" class="search-select">
-          <el-option label="全部类型" value="" />
-          <el-option label="丢失物品" value="lost" />
-          <el-option label="拾取物品" value="found" />
+          <el-option label="其他" value="其他" />
         </el-select>
         <el-button type="primary" size="large" @click="handleSearch">
           <el-icon><Search /></el-icon>
@@ -38,74 +35,65 @@
         <el-card class="post-list-card">
           <template #header>
             <div class="card-header">
-              <span>最新信息</span>
-              <el-radio-group v-model="sortType" size="small">
-                <el-radio-button value="time">按时间</el-radio-button>
-                <el-radio-button value="hot">按热度</el-radio-button>
-              </el-radio-group>
+              <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+                <el-tab-pane label="失物信息" name="lost" />
+                <el-tab-pane label="拾物信息" name="found" />
+              </el-tabs>
             </div>
           </template>
-          <div class="post-list">
-            <div v-for="item in mockPosts" :key="item.id" class="post-item" @click="viewDetail(item)">
-              <div class="post-type" :class="item.type">
-                {{ item.type === 'lost' ? '失物' : '拾物' }}
+          <div v-loading="loading" class="post-list">
+            <div v-if="currentList.length === 0 && !loading" class="empty-tip">
+              暂无{{ activeTab === 'lost' ? '失物' : '拾物' }}信息
+            </div>
+            <div v-for="item in currentList" :key="item.id" class="post-item" @click="viewDetail(item)">
+              <div class="post-type" :class="activeTab">
+                {{ activeTab === 'lost' ? '失物' : '拾物' }}
               </div>
               <div class="post-content">
-                <div class="post-title">{{ item.title }}</div>
+                <div class="post-title-wrapper">
+                  <el-tag v-if="item.sortOrder === 1 && item.applyTop === 2" type="danger" size="small" class="top-tag">置顶</el-tag>
+                  <div class="post-title">{{ item.itemName }}</div>
+                </div>
                 <div class="post-info">
                   <span class="post-location">
                     <el-icon><Location /></el-icon>
-                    {{ item.location }}
+                    {{ activeTab === 'lost' ? item.lostPlace : item.foundPlace }}
                   </span>
                   <span class="post-time">
                     <el-icon><Clock /></el-icon>
-                    {{ item.time }}
+                    {{ formatDateTime(activeTab === 'lost' ? item.lostTime : item.foundTime) }}
                   </span>
                 </div>
                 <div class="post-desc">{{ item.description }}</div>
+                <div v-if="item.contactInfo" class="post-contact">
+                  <span class="contact-label">联系方式：</span>
+                  <span>{{ item.contactInfo }}</span>
+                </div>
               </div>
-              <div class="post-avatar">
-                <el-avatar :size="40">{{ item.user.charAt(0) }}</el-avatar>
+              <div v-if="item.imageUrl" class="post-image">
+                <el-image :src="item.imageUrl" :preview-src-list="[item.imageUrl]" fit="cover" />
               </div>
             </div>
           </div>
           <el-pagination
+            v-if="total > 0"
             v-model:current-page="currentPage"
-            :page-size="pageSize"
+            v-model:page-size="pageSize"
             :total="total"
-            layout="prev, pager, next"
+            :page-sizes="[5, 10, 20]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
             class="pagination"
           />
         </el-card>
       </div>
 
       <div class="sidebar">
-        <el-card class="stats-card">
-          <template #header>
-            <span>平台统计</span>
-          </template>
-          <div class="stats-item">
-            <div class="stats-number">1,234</div>
-            <div class="stats-label">发布信息</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-number">856</div>
-            <div class="stats-label">找回物品</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-number">567</div>
-            <div class="stats-label">活跃用户</div>
-          </div>
-        </el-card>
-
         <el-card class="quick-publish-card">
-          <el-button type="primary" size="large" class="quick-btn" @click="goPublish('lost')">
-            <el-icon><Warning /></el-icon>
-            发布失物信息
-          </el-button>
-          <el-button type="success" size="large" class="quick-btn" @click="goPublish('found')">
-            <el-icon><CircleCheck /></el-icon>
-            发布拾物信息
+          <el-button type="primary" size="large" class="quick-btn" @click="goPublish">
+            <el-icon><Edit /></el-icon>
+            发布信息
           </el-button>
         </el-card>
       </div>
@@ -114,69 +102,112 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { lostApi } from '@/api/lost'
+import { foundApi } from '@/api/found'
 
 const router = useRouter()
 
+const activeTab = ref('lost')
 const searchKeyword = ref('')
 const searchLocation = ref('')
-const searchType = ref('')
-const sortType = ref('time')
 const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(50)
+const pageSize = ref(5)
+const total = ref(0)
+const loading = ref(false)
+const lostList = ref([])
+const foundList = ref([])
 
-const mockPosts = ref([
-  {
-    id: 1,
-    type: 'lost',
-    title: '丢失黑色钱包',
-    location: '图书馆二楼',
-    time: '2024-04-05 14:30',
-    description: '黑色皮质钱包，内有身份证、银行卡和现金若干',
-    user: '张三'
-  },
-  {
-    id: 2,
-    type: 'found',
-    title: '捡到校园卡一张',
-    location: '第一食堂',
-    time: '2024-04-05 12:15',
-    description: '在食堂门口捡到校园卡一张，请到失物招领处认领',
-    user: '李四'
-  },
-  {
-    id: 3,
-    type: 'lost',
-    title: '丢失白色AirPods',
-    location: '教学楼A座',
-    time: '2024-04-04 16:45',
-    description: '白色AirPods Pro，充电盒有轻微划痕',
-    user: '王五'
-  },
-  {
-    id: 4,
-    type: 'found',
-    title: '捡到一串钥匙',
-    location: '操场',
-    time: '2024-04-04 18:20',
-    description: '一串钥匙，有宿舍钥匙和自行车钥匙',
-    user: '赵六'
+const currentList = computed(() => {
+  return activeTab.value === 'lost' ? lostList.value : foundList.value
+})
+
+const loadLostItems = async () => {
+  loading.value = true
+  try {
+    const res = await lostApi.getHomeLostItems({
+      itemName: searchKeyword.value,
+      lostPlace: searchLocation.value,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
+    lostList.value = res.data.records || []
+    total.value = res.data.total || 0
+  } catch (error) {
+    console.error(error)
+    lostList.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
   }
-])
+}
+
+const loadFoundItems = async () => {
+  loading.value = true
+  try {
+    const res = await foundApi.getHomeFoundItems({
+      itemName: searchKeyword.value,
+      foundPlace: searchLocation.value,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
+    foundList.value = res.data.records || []
+    total.value = res.data.total || 0
+  } catch (error) {
+    console.error(error)
+    foundList.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleSearch = () => {
-  console.log('搜索', searchKeyword.value, searchLocation.value, searchType.value)
+  currentPage.value = 1
+  loadData()
+}
+
+const loadData = () => {
+  if (activeTab.value === 'lost') {
+    loadLostItems()
+  } else {
+    loadFoundItems()
+  }
+}
+
+const handleTabChange = () => {
+  currentPage.value = 1
+  loadData()
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  loadData()
+}
+
+const handleCurrentChange = (page) => {
+  currentPage.value = page
+  loadData()
 }
 
 const viewDetail = (item) => {
-  console.log('查看详情', item)
+  router.push(`/detail/${activeTab.value}/${item.id}`)
 }
 
-const goPublish = (type) => {
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const goPublish = () => {
   router.push('/publish')
 }
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>
@@ -228,6 +259,14 @@ const goPublish = (type) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 400px;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 60px 0;
+  color: #909399;
+  font-size: 14px;
 }
 
 .post-item {
@@ -271,11 +310,21 @@ const goPublish = (type) => {
   min-width: 0;
 }
 
+.post-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.top-tag {
+  flex-shrink: 0;
+}
+
 .post-title {
   font-size: 16px;
   font-weight: bold;
   color: #303133;
-  margin-bottom: 8px;
 }
 
 .post-info {
@@ -299,41 +348,35 @@ const goPublish = (type) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-bottom: 8px;
 }
 
-.post-avatar {
+.post-contact {
+  font-size: 13px;
+  color: #409eff;
+}
+
+.contact-label {
+  color: #909399;
+}
+
+.post-image {
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.post-image :deep(.el-image) {
+  width: 100%;
+  height: 100%;
 }
 
 .pagination {
   margin-top: 24px;
   display: flex;
   justify-content: center;
-}
-
-.stats-card {
-  margin-bottom: 24px;
-}
-
-.stats-item {
-  text-align: center;
-  padding: 16px 0;
-}
-
-.stats-item + .stats-item {
-  border-top: 1px solid #ebeef5;
-}
-
-.stats-number {
-  font-size: 28px;
-  font-weight: bold;
-  color: #667eea;
-  margin-bottom: 4px;
-}
-
-.stats-label {
-  font-size: 14px;
-  color: #909399;
 }
 
 .quick-publish-card {
