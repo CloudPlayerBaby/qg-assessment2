@@ -8,17 +8,16 @@ import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.admin.TopRequest;
 import com.yuriyuri.dto.found.FoundInfoRequest;
 import com.yuriyuri.dto.lost.LostInfoRequest;
-import com.yuriyuri.entity.FoundItem;
-import com.yuriyuri.entity.LostItem;
-import com.yuriyuri.entity.Report;
-import com.yuriyuri.entity.User;
+import com.yuriyuri.entity.*;
 import com.yuriyuri.mapper.FoundMapper;
 import com.yuriyuri.mapper.LostMapper;
 import com.yuriyuri.mapper.ReportMapper;
 import com.yuriyuri.mapper.UserMapper;
+import com.yuriyuri.mapper.admin.UserLoginLogMapper;
 import com.yuriyuri.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +33,8 @@ public class AdminServiceImpl implements AdminService {
     private FoundMapper foundMapper;
     @Autowired
     private ReportMapper reportMapper;
+    @Autowired
+    private UserLoginLogMapper userLoginLogMapper;
 
     //以下为置顶功能
 
@@ -86,6 +87,7 @@ public class AdminServiceImpl implements AdminService {
      * @param req
      */
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void setLostTop(TopRequest req) {
         LocalDateTime topEndTime = LocalDateTime.now().plusHours(req.getHours());
         //更新sort_order为1，apply_top（接受置顶）为2，top_end_time为(now+hours)
@@ -103,6 +105,7 @@ public class AdminServiceImpl implements AdminService {
      * @param req
      */
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void setFoundTop(TopRequest req) {
         LocalDateTime topEndTime = LocalDateTime.now().plusHours(req.getHours());
         LambdaUpdateWrapper<FoundItem> wrapper = new LambdaUpdateWrapper<>();
@@ -119,6 +122,7 @@ public class AdminServiceImpl implements AdminService {
      * @param id
      */
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void rejectLostTop(Long id) {
         LambdaUpdateWrapper<LostItem> wrapper = new LambdaUpdateWrapper<>();
         //置顶请求-1即为被驳回
@@ -128,6 +132,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void rejectFoundTop(Long id) {
         LambdaUpdateWrapper<FoundItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(FoundItem::getId, id)
@@ -165,6 +170,7 @@ public class AdminServiceImpl implements AdminService {
      * @param req
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void acceptPostReport(Long id, ReportRequest req) {
         Report report = reportMapper.selectById(id);
         if (report == null) {
@@ -189,6 +195,7 @@ public class AdminServiceImpl implements AdminService {
      * @param req
      */
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void rejectPostReport(Long id, ReportRequest req) {
         Report report = reportMapper.selectById(id);
         if (report == null) {
@@ -227,6 +234,7 @@ public class AdminServiceImpl implements AdminService {
      * @param id
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void banUser(Long id) {
         //0就是封了
         updateUserStatus(id,0);
@@ -238,6 +246,7 @@ public class AdminServiceImpl implements AdminService {
      * @param id
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void unBanUser(Long id) {
         //1就是解封
         updateUserStatus(id,1);
@@ -249,6 +258,7 @@ public class AdminServiceImpl implements AdminService {
      * @param type
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void banPost(Long id, String type) {
         updatePostStatus(id, type, -1);
     }
@@ -259,6 +269,7 @@ public class AdminServiceImpl implements AdminService {
      * @param type
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void unBanPost(Long id, String type) {
         updatePostStatus(id, type, 1);
     }
@@ -269,6 +280,7 @@ public class AdminServiceImpl implements AdminService {
      * @param type
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletePost(Long id, String type) {
         if("lost".equals(type)){
             if(lostMapper.selectById(id)==null){
@@ -282,6 +294,45 @@ public class AdminServiceImpl implements AdminService {
             }
             foundMapper.deleteById(id);
         }
+    }
+
+    /**
+     * 获取发布信息数量
+     * @return
+     */
+    @Override
+    public Long getPostNumber() {
+        LambdaQueryWrapper<LostItem> lostWrapper = new LambdaQueryWrapper<>();
+        Long lostPostNumber = lostMapper.selectCount(lostWrapper);
+        LambdaQueryWrapper<FoundItem> foundWrapper = new LambdaQueryWrapper<>();
+        Long foundPostNumber = foundMapper.selectCount(foundWrapper);
+        return lostPostNumber+foundPostNumber;
+    }
+
+    /**
+     * 获取找回物品数量
+     * @return
+     */
+    @Override
+    public Long getCompletedPostNumber() {
+        //状态为2的为已完成（已找回）
+        LambdaQueryWrapper<LostItem> lostWrapper = new LambdaQueryWrapper<>();
+        lostWrapper.eq(LostItem::getStatus, 2);
+        Long lostPostNumber = lostMapper.selectCount(lostWrapper);
+        LambdaQueryWrapper<FoundItem> foundWrapper = new LambdaQueryWrapper<>();
+        foundWrapper.eq(FoundItem::getStatus,2);
+        Long foundPostNumber = foundMapper.selectCount(foundWrapper);
+        return lostPostNumber+foundPostNumber;
+    }
+
+    /**
+     * 获取活跃用户数（24h内）
+     * @return
+     */
+    @Override
+    public Long getActiveUsersNumber(LocalDateTime startTime) {
+        LocalDateTime endTime = LocalDateTime.now();
+        return userLoginLogMapper.countDistinctUserId(startTime, endTime);
     }
 
     //以下为方法

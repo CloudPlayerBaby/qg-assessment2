@@ -15,9 +15,13 @@
         >
           <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/publish">发布信息</el-menu-item>
-          <el-menu-item index="/messages">消息中心</el-menu-item>
         </el-menu>
         <div class="header-right">
+          <div v-if="isLoggedIn" class="message-container" @click="router.push('/profile?tab=messages')">
+            <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="message-badge">
+              <el-icon :size="20"><ChatDotRound /></el-icon>
+            </el-badge>
+          </div>
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :size="32" :src="userInfo?.avatarUrl">
@@ -52,18 +56,98 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { commentApi } from '@/api/comment'
+import { privateMessageApi } from '@/api/privateMessage'
+import { setChatSocket } from '@/utils/chatSocket'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo)
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 const activeMenu = computed(() => route.path)
+
+const unreadCount = ref(0)
+let timer = null
+let ws = null
+
+const fetchUnreadTotal = async () => {
+  if (!isLoggedIn.value) return
+  try {
+    const [cRes, pRes] = await Promise.all([
+      commentApi.getUnreadCount(),
+      privateMessageApi.getUnreadCount()
+    ])
+    unreadCount.value = (cRes.data || 0) + (pRes.data || 0)
+  } catch (error) {
+    console.error('获取未读消息失败:', error)
+  }
+}
+
+function buildWsUrl() {
+  const token = localStorage.getItem('token') || ''
+  if (import.meta.env.DEV) {
+    return `ws://localhost:8080/ws/private?token=${encodeURIComponent(token)}`
+  }
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${proto}//${window.location.host}/ws/private?token=${encodeURIComponent(token)}`
+}
+
+function disconnectWs() {
+  if (ws) {
+    ws.close()
+    ws = null
+  }
+  setChatSocket(null)
+}
+
+function connectWs() {
+  disconnectWs()
+  if (!isLoggedIn.value) return
+  ws = new WebSocket(buildWsUrl())
+  setChatSocket(ws)
+  ws.onmessage = (ev) => {
+    const d = JSON.parse(ev.data)
+    window.dispatchEvent(new CustomEvent('ws-chat', { detail: d }))
+    if (d.type === 'newComment') {
+      ElNotification({
+        title: '新留言',
+        message: d.preview || '有人给您的帖子留言了'
+      })
+      fetchUnreadTotal()
+    } else if (d.type === 'newPrivateMessage' && d.message) {
+      const myId = userStore.userInfo?.id
+      if (d.message.receiverId === myId) {
+        ElNotification({
+          title: '私聊消息',
+          message: (d.message.content || '').slice(0, 80) || '您有一条新私聊'
+        })
+      }
+      fetchUnreadTotal()
+    }
+  }
+  ws.onerror = () => {}
+}
+
+onMounted(() => {
+  fetchUnreadTotal()
+  timer = setInterval(fetchUnreadTotal, 30000)
+  connectWs()
+  window.addEventListener('refresh-unread', fetchUnreadTotal)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+  disconnectWs()
+  window.removeEventListener('refresh-unread', fetchUnreadTotal)
+})
 
 const handleCommand = async (command) => {
   if (command === 'profile') {
@@ -127,6 +211,24 @@ const handleCommand = async (command) => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 20px;
+}
+
+.message-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #606266;
+}
+
+.message-container:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
 }
 
 .user-info {
@@ -146,6 +248,10 @@ const handleCommand = async (command) => {
 .username {
   font-size: 14px;
   color: #333;
+}
+
+.message-badge {
+  margin-left: 8px;
 }
 
 .layout-main {

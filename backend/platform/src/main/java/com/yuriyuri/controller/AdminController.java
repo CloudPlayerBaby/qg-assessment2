@@ -14,7 +14,10 @@ import com.yuriyuri.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/admin")
@@ -146,4 +149,29 @@ public class AdminController {
         adminService.deletePost(id, type);
         return Result.success();
     }
+
+    @GetMapping("/admin/statistics/posts-count")
+    @Operation(summary = "获取发布信息数量")
+    public Result<Long> getPostNumber() {
+        Long postNumber = adminService.getPostNumber();
+        return Result.success(postNumber);
+    }
+
+    @GetMapping("/admin/statistics/posts-completed-count")
+    @Operation(summary = "获取找回物品数量")
+    public Result<Long> getCompletedPostNumber() {
+        Long completedPostNumber = adminService.getCompletedPostNumber();
+        return Result.success(completedPostNumber);
+    }
+
+    @GetMapping("/admin/statistics/active-users-count")
+    @Operation(summary = "获取活跃用户数")
+    public Result<Long> getActiveUsersNumber() {
+        //开始时间是前一天，结束时间是现在
+        LocalDateTime startTime = LocalDateTime.now().minusDays(1);
+        Long activeUsersNumber = adminService.getActiveUsersNumber(startTime);
+        return Result.success(activeUsersNumber);
+    }
+
+
 }

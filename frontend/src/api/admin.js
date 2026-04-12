@@ -135,5 +135,26 @@ export const adminApi = {
       method: 'get',
       params: params
     })
+  },
+
+  getPostNumber() {
+    return request({
+      url: '/admin/admin/statistics/posts-count',
+      method: 'get'
+    })
+  },
+
+  getCompletedPostNumber() {
+    return request({
+      url: '/admin/admin/statistics/posts-completed-count',
+      method: 'get'
+    })
+  },
+
+  getActiveUsersNumber() {
+    return request({
+      url: '/admin/admin/statistics/active-users-count',
+      method: 'get'
+    })
   }
 }

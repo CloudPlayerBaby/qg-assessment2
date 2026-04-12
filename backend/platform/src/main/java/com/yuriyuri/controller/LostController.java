@@ -90,4 +90,13 @@ public class LostController {
         Page<LostItem> lostInfoByPage = lostService.getLostInfoByPage(req, pageNum, pageSize);
         return Result.success(lostInfoByPage);
     }
+
+    @PatchMapping("/{id}/confirm")
+    @Operation(summary = "确认失物已认领")
+    public Result<Void> confirmLostItem(@PathVariable Long id){
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        lostService.confirmItem(id, userId);
+        return Result.success();
+    }
 }

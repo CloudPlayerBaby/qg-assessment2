@@ -10,7 +10,9 @@ import com.yuriyuri.dto.user.PasswordUpdateRequest;
 import com.yuriyuri.dto.user.RegisterRequest;
 import com.yuriyuri.dto.user.UserUpdateRequest;
 import com.yuriyuri.entity.User;
+import com.yuriyuri.entity.UserLoginLog;
 import com.yuriyuri.mapper.UserMapper;
+import com.yuriyuri.mapper.admin.UserLoginLogMapper;
 import com.yuriyuri.service.UserService;
 import com.yuriyuri.util.JwtUtil;
 import com.yuriyuri.util.Md5Util;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +30,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserLoginLogMapper userLoginLogMapper;
 
     /**
      * 注册
@@ -112,7 +118,16 @@ public class UserServiceImpl implements UserService {
         userInfo.setAvatarUrl(user.getAvatarUrl());
         userInfo.setIdentity(user.getIdentity());
 
-        //返回给controller层，结果如何前端可以直接看到（这端是ai写的，我觉得没必要）
+        //登录成功后插入一条登陆数据给user_login_log表
+        //管理员不算日活跃用户数，只有普通用户算
+        if(user.getIdentity()==0){
+            UserLoginLog userLoginLog = new UserLoginLog();
+            userLoginLog.setUserId(user.getId());
+            userLoginLog.setLoginTime(LocalDateTime.now());
+            userLoginLogMapper.insert(userLoginLog);
+        }
+
+        //返回给controller层，结果如何前端可以直接看到（这段是ai写的，我觉得没必要）
         return new LoginResponse(token, userInfo);
     }
 

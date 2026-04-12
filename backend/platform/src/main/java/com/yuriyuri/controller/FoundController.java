@@ -88,4 +88,13 @@ public class FoundController {
         Page<FoundItem> foundInfoByPage = foundService.getFoundInfoByPage(req, pageNum, pageSize);
         return Result.success(foundInfoByPage);
     }
+
+    @PatchMapping("/{id}/confirm")
+    @Operation(summary = "确认拾物已认领")
+    public Result<Void> confirmFoundItem(@PathVariable Long id){
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        foundService.confirmItem(id, userId);
+        return Result.success();
+    }
 }

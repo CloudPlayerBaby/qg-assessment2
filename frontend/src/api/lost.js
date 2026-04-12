@@ -53,5 +53,11 @@ export const lostApi = {
       method: 'put',
       data: data
     })
+  },
+  confirmItem(id) {
+    return request({
+      url: `/lost/${id}/confirm`,
+      method: 'patch'
+    })
   }
 }

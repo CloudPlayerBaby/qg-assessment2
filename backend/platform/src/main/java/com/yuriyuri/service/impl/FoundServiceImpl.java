@@ -150,4 +150,19 @@ public class FoundServiceImpl implements FoundService {
                 .set(FoundItem::getStatus, 0);
         foundMapper.update(wrapper);
     }
+
+    @Override
+    @Transactional(rollbackFor =  Exception.class)
+    public void confirmItem(Long id, Long userId) {
+        FoundItem foundItem = checkInfoExist(id);
+        
+        if (!foundItem.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作他人的拾物信息");
+        }
+        
+        LambdaUpdateWrapper<FoundItem> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(FoundItem::getId, id)
+                .set(FoundItem::getStatus, 2);
+        foundMapper.update(updateWrapper);
+    }
 }

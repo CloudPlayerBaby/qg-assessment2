@@ -13,4 +13,5 @@ public interface FoundService {
     void deleteFoundInfo(Long id, Long userId);
     Page<FoundItem> getFoundInfoByPage(FoundInfoRequest req, int pageNum, int pageSize);
     void reportPost(Long userId, ReportRequest req);
+    void confirmItem(Long id, Long userId);
 }

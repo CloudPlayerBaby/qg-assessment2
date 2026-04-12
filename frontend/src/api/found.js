@@ -53,5 +53,11 @@ export const foundApi = {
       method: 'put',
       data: data
     })
+  },
+  confirmItem(id) {
+    return request({
+      url: `/found/${id}/confirm`,
+      method: 'patch'
+    })
   }
 }

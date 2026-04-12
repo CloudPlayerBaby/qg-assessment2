@@ -10,6 +10,8 @@ import com.yuriyuri.entity.LostItem;
 import com.yuriyuri.entity.Report;
 import com.yuriyuri.entity.User;
 
+import java.time.LocalDateTime;
+
 public interface AdminService {
     //处理置顶内容
     //流程：看到消息->查看帖子->确认置顶/拒绝置顶
@@ -47,4 +49,10 @@ public interface AdminService {
     void banPost(Long id,String type);
 
     void deletePost(Long id,String type);
+
+    //平台统计
+    //发布信息数量、找回物品数量、活跃用户数
+    Long getPostNumber();
+    Long getCompletedPostNumber();
+    Long getActiveUsersNumber(LocalDateTime startTime);
 }

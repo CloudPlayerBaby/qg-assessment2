@@ -57,6 +57,13 @@ public class UserController {
         return Result.success(user);
     }
 
+    @GetMapping("/info/{id}")
+    @Operation(summary = "根据ID获取用户信息")
+    public Result<User> getUserInfoById(@PathVariable Long id) {
+        User user = userService.getUserInfo(id);
+        return Result.success(user);
+    }
+
     @PatchMapping("/password")
     @Operation(summary = "修改密码")
     public Result<Void> updatePassword(@Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {

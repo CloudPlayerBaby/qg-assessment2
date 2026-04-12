@@ -24,6 +24,13 @@ export const userApi = {
     })
   },
 
+  getUserInfoById(id) {
+    return request({
+      url: `/user/info/${id}`,
+      method: 'get'
+    })
+  },
+
   updateProfile(data) {
     return request({
       url: '/user/profile',

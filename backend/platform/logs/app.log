@@ -1,88 +1,14 @@
-2026-04-10T20:19:17.449+08:00  INFO 24080 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 24080 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
-2026-04-10T20:19:17.457+08:00  INFO 24080 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
-2026-04-10T20:19:18.973+08:00  INFO 24080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-04-10T20:19:18.991+08:00  INFO 24080 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-10T20:19:18.992+08:00  INFO 24080 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
-2026-04-10T20:19:19.060+08:00  INFO 24080 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-04-10T20:19:19.061+08:00  INFO 24080 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1540 ms
-2026-04-10T20:19:20.238+08:00  INFO 24080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-04-10T20:19:20.252+08:00  INFO 24080 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 3.509 seconds (process running for 4.306)
-2026-04-10T20:19:39.742+08:00  INFO 24080 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-10T20:19:39.742+08:00  INFO 24080 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-10T20:19:39.744+08:00  INFO 24080 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
-2026-04-10T20:21:04.350+08:00  INFO 24080 --- [http-nio-8080-exec-4] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-10T20:21:04.607+08:00  INFO 24080 --- [http-nio-8080-exec-4] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@71237f39
-2026-04-10T20:21:04.610+08:00  INFO 24080 --- [http-nio-8080-exec-4] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-10T20:35:09.498+08:00  INFO 24080 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-10T20:35:09.509+08:00  INFO 24080 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
-2026-04-10T20:35:09.526+08:00  INFO 24080 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-04-10T20:35:09.562+08:00  INFO 24080 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-04-10T21:04:37.537+08:00  INFO 30616 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 30616 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
-2026-04-10T21:04:37.541+08:00  INFO 30616 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
-2026-04-10T21:04:38.949+08:00  INFO 30616 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-04-10T21:04:38.967+08:00  INFO 30616 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-10T21:04:38.967+08:00  INFO 30616 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
-2026-04-10T21:04:39.051+08:00  INFO 30616 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-04-10T21:04:39.052+08:00  INFO 30616 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1449 ms
-2026-04-10T21:04:39.822+08:00  WARN 30616 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Multiple @RequestMapping annotations found on public com.yuriyuri.common.Result com.yuriyuri.controller.AdminController.unBanUser(java.lang.Long), but only the first will be used: [@org.springframework.web.bind.annotation.GetMapping(consumes={}, headers={}, name="", params={}, path={"/admin/posts"}, produces={}, value={"/admin/posts"}), @org.springframework.web.bind.annotation.PatchMapping(consumes={}, headers={}, name="", params={}, path={"/admin/users/unBan/{id}"}, produces={}, value={"/admin/users/unBan/{id}"})]
-2026-04-10T21:04:40.215+08:00  INFO 30616 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-04-10T21:04:40.228+08:00  INFO 30616 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 3.388 seconds (process running for 4.088)
-2026-04-10T21:06:02.756+08:00  INFO 30616 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-10T21:06:02.758+08:00  INFO 30616 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-10T21:06:02.759+08:00  INFO 30616 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
-2026-04-10T21:06:03.154+08:00  INFO 30616 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-10T21:06:03.375+08:00  INFO 30616 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@69ffd017
-2026-04-10T21:06:03.378+08:00  INFO 30616 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-10T21:06:53.230+08:00  INFO 30616 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-10T21:06:53.236+08:00  INFO 30616 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
-2026-04-10T21:06:53.242+08:00  INFO 30616 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-04-10T21:06:53.250+08:00  INFO 30616 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-04-10T21:06:57.917+08:00  INFO 18040 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 18040 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
-2026-04-10T21:06:57.920+08:00  INFO 18040 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
-2026-04-10T21:06:59.269+08:00  INFO 18040 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-04-10T21:06:59.286+08:00  INFO 18040 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-10T21:06:59.287+08:00  INFO 18040 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
-2026-04-10T21:06:59.358+08:00  INFO 18040 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-04-10T21:06:59.359+08:00  INFO 18040 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1378 ms
-2026-04-10T21:07:00.530+08:00  INFO 18040 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-04-10T21:07:00.543+08:00  INFO 18040 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 3.221 seconds (process running for 3.994)
-2026-04-10T21:07:05.070+08:00  INFO 18040 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-10T21:07:05.070+08:00  INFO 18040 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-10T21:07:05.071+08:00  INFO 18040 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
-2026-04-10T21:07:05.483+08:00  INFO 18040 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-10T21:07:05.723+08:00  INFO 18040 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@112a88f5
-2026-04-10T21:07:05.725+08:00  INFO 18040 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-10T21:32:48.398+08:00  INFO 18040 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-10T21:32:48.404+08:00  INFO 18040 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
-2026-04-10T21:32:48.410+08:00  INFO 18040 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-04-10T21:32:48.414+08:00  INFO 18040 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-04-10T21:32:53.631+08:00  INFO 32756 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 32756 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
-2026-04-10T21:32:53.633+08:00  INFO 32756 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
-2026-04-10T21:32:55.013+08:00  INFO 32756 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-04-10T21:32:55.030+08:00  INFO 32756 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-10T21:32:55.031+08:00  INFO 32756 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
-2026-04-10T21:32:55.100+08:00  INFO 32756 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-04-10T21:32:55.101+08:00  INFO 32756 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1408 ms
-2026-04-10T21:32:56.137+08:00  INFO 32756 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-04-10T21:32:56.149+08:00  INFO 32756 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 3.158 seconds (process running for 3.853)
-2026-04-10T21:33:02.542+08:00  INFO 32756 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-10T21:33:02.542+08:00  INFO 32756 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-10T21:33:02.544+08:00  INFO 32756 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
-2026-04-10T21:33:02.915+08:00  INFO 32756 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-10T21:33:03.136+08:00  INFO 32756 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3407087a
-2026-04-10T21:33:03.139+08:00  INFO 32756 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-10T22:16:24.743+08:00  INFO 32756 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-10T22:16:24.753+08:00  INFO 32756 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
-2026-04-10T22:16:24.762+08:00  INFO 32756 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-04-10T22:16:24.765+08:00  INFO 32756 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-04-10T22:18:21.235+08:00  INFO 36396 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 36396 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
-2026-04-10T22:18:21.238+08:00  INFO 36396 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
-2026-04-10T22:18:22.789+08:00  INFO 36396 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-04-10T22:18:22.810+08:00  INFO 36396 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-04-10T22:18:22.810+08:00  INFO 36396 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
-2026-04-10T22:18:22.888+08:00  INFO 36396 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-04-10T22:18:22.889+08:00  INFO 36396 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1585 ms
-2026-04-10T22:18:24.135+08:00  INFO 36396 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2026-04-10T22:18:24.150+08:00  INFO 36396 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 3.632 seconds (process running for 4.399)
-2026-04-10T22:18:25.489+08:00  INFO 36396 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-10T22:18:25.495+08:00  INFO 36396 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-04-13T00:00:00.147+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-13T00:00:00.420+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@197a8723
+2026-04-13T00:00:00.424+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-13T00:00:03.069+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-13T00:00:03.069+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-13T00:00:03.071+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-04-13T00:00:03.302+08:00  INFO 28868 --- [http-nio-8080-exec-1] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已建立，用户ID: 1
+2026-04-13T00:00:10.088+08:00  INFO 28868 --- [http-nio-8080-exec-4] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已建立，用户ID: 5
+2026-04-13T00:03:05.648+08:00  INFO 28868 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-13T00:03:05.655+08:00  INFO 28868 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-04-13T00:03:05.662+08:00  INFO 28868 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-13T00:03:05.669+08:00  INFO 28868 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-13T00:03:05.674+08:00  INFO 28868 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已关闭，用户ID: 1
+2026-04-13T00:03:05.674+08:00  INFO 28868 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已关闭，用户ID: 5

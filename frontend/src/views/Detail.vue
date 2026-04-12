@@ -4,10 +4,21 @@
       <template #header>
         <div class="card-header">
           <span>{{ type === 'lost' ? '失物详情' : '拾物详情' }}</span>
-          <el-button v-if="isLoggedIn" type="danger" @click="showReportDialog">
-            <el-icon><Warning /></el-icon>
-            举报该帖子
-          </el-button>
+          <div class="header-actions">
+            <el-button
+              v-if="isLoggedIn && canPrivateChat"
+              type="primary"
+              plain
+              @click="openPrivateChat"
+            >
+              <el-icon><ChatDotRound /></el-icon>
+              私聊发帖人
+            </el-button>
+            <el-button v-if="isLoggedIn" type="danger" @click="showReportDialog">
+              <el-icon><Warning /></el-icon>
+              举报该帖子
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -45,6 +56,54 @@
         <div v-if="item.imageUrl" class="detail-image">
           <el-image :src="item.imageUrl" :preview-src-list="[item.imageUrl]" fit="contain" />
         </div>
+
+        <div class="comment-section">
+          <h3>评论区</h3>
+          
+          <div v-if="isLoggedIn" class="comment-input">
+            <el-form :model="commentForm" label-position="top">
+              <el-form-item label="发表评论">
+                <el-input
+                  v-model="commentForm.content"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入您的评论或留言内容"
+                />
+              </el-form-item>
+              <el-form-item label="联系方式（可选）">
+                <el-input
+                  v-model="commentForm.contactInfo"
+                  placeholder="如果您希望失主/拾主联系您，请在此留下手机号或微信"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="submitComment" :loading="commentSubmitting">
+                  发表评论
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div v-else class="login-tip">
+            <el-button type="primary" link @click="router.push('/login')">登录后发表评论</el-button>
+          </div>
+
+          <div class="comment-list" v-loading="commentsLoading">
+            <div v-if="comments.length > 0">
+              <div v-for="comment in comments" :key="comment.id" class="comment-item">
+                <div class="comment-header">
+                  <span class="comment-sender">用户 {{ comment.senderId }}</span>
+                  <span class="comment-time">{{ formatDateTime(comment.createTime) }}</span>
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+                <div v-if="comment.contactInfo" class="comment-contact">
+                  <span class="contact-label">联系方式：</span>
+                  <span class="contact-value">{{ comment.contactInfo }}</span>
+                </div>
+              </div>
+            </div>
+            <el-empty v-else description="暂无评论" :image-size="60" />
+          </div>
+        </div>
       </div>
 
       <el-empty v-else description="帖子不存在" />
@@ -70,6 +129,12 @@
         <el-button type="primary" @click="submitReport" :loading="submitting">提交举报</el-button>
       </template>
     </el-dialog>
+
+    <PrivateChatDialog
+      v-model="chatVisible"
+      :session-id="chatSessionId"
+      :peer-name="chatPeerName"
+    />
   </div>
 </template>
 
@@ -77,9 +142,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Warning } from '@element-plus/icons-vue'
+import { Warning, ChatDotRound } from '@element-plus/icons-vue'
+import PrivateChatDialog from '@/components/PrivateChatDialog.vue'
 import { lostApi } from '@/api/lost'
 import { foundApi } from '@/api/found'
+import { commentApi } from '@/api/comment'
+import { privateMessageApi } from '@/api/privateMessage'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -97,7 +165,28 @@ const reportForm = ref({
   reason: ''
 })
 
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentSubmitting = ref(false)
+const commentForm = ref({
+  postId: null,
+  postType: '',
+  content: '',
+  contactInfo: ''
+})
+
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+const currentUserId = computed(() => userStore.userInfo?.id)
+
+const chatVisible = ref(false)
+const chatSessionId = ref('')
+const chatPeerName = ref('')
+
+const canPrivateChat = computed(() => {
+  if (!item.value || !currentUserId.value) return false
+  const ownerId = item.value.userId
+  return ownerId != null && Number(ownerId) !== Number(currentUserId.value)
+})
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return ''
@@ -122,12 +211,49 @@ const loadDetail = async () => {
       item.value = res.data
       reportForm.value.targetId = id
       reportForm.value.type = lowerType
+      commentForm.value.postId = id
+      commentForm.value.postType = lowerType
+      loadComments()
     }
   } catch (error) {
     console.error('加载详情失败:', error)
     ElMessage.error('加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+const loadComments = async () => {
+  const { id, itemType } = route.params
+  commentsLoading.value = true
+  try {
+    const res = await commentApi.getComments(id, itemType.toLowerCase())
+    comments.value = res.data
+  } catch (error) {
+    console.error('加载评论失败:', error)
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+const submitComment = async () => {
+  if (!commentForm.value.content.trim()) {
+    ElMessage.warning('请输入评论内容')
+    return
+  }
+
+  commentSubmitting.value = true
+  try {
+    await commentApi.addComment(commentForm.value)
+    ElMessage.success('评论发表成功')
+    commentForm.value.content = ''
+    commentForm.value.contactInfo = ''
+    loadComments()
+  } catch (error) {
+    console.error('发表评论失败:', error)
+    ElMessage.error('发表失败')
+  } finally {
+    commentSubmitting.value = false
   }
 }
 
@@ -139,6 +265,31 @@ const showReportDialog = () => {
   }
   reportForm.value.reason = ''
   reportDialogVisible.value = true
+}
+
+const openPrivateChat = async () => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+  if (!item.value?.userId) {
+    ElMessage.warning('无法发起私聊')
+    return
+  }
+  try {
+    const res = await privateMessageApi.ensureSession({
+      postId: Number(route.params.id),
+      postType: type.value,
+      peerId: item.value.userId
+    })
+    chatSessionId.value = res.data.sessionId
+    chatPeerName.value = res.data.peerDisplayName || '发帖人'
+    chatVisible.value = true
+  } catch (error) {
+    console.error(error)
+    ElMessage.error(error.message || '无法发起私聊')
+  }
 }
 
 const submitReport = async () => {
@@ -282,5 +433,82 @@ onMounted(() => {
 .detail-image :deep(.el-image) {
   width: 100%;
   border-radius: 8px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.comment-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.comment-section h3 {
+  font-size: 18px;
+  color: #303133;
+  margin-bottom: 20px;
+}
+
+.comment-input {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.login-tip {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.comment-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #f2f6fc;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.comment-sender {
+  font-weight: bold;
+  color: #409eff;
+  font-size: 14px;
+}
+
+.comment-time {
+  color: #909399;
+  font-size: 12px;
+}
+
+.comment-content {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.comment-contact {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #ecf5ff;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.contact-label {
+  color: #409eff;
+}
+
+.contact-value {
+  color: #303133;
+  font-weight: 500;
 }
 </style>

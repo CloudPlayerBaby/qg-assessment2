@@ -1,54 +1,41 @@
 <template>
   <div class="statistics-container">
     <el-row :gutter="24">
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
               <el-icon :size="32"><Document /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">1,234</div>
+              <div class="stat-number">{{ formatNumber(postNumber) }}</div>
               <div class="stat-label">发布信息总数</div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
               <el-icon :size="32"><CircleCheck /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">856</div>
+              <div class="stat-number">{{ formatNumber(completedPostNumber) }}</div>
               <div class="stat-label">找回物品数</div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
               <el-icon :size="32"><User /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">567</div>
+              <div class="stat-number">{{ formatNumber(activeUsersNumber) }}</div>
               <div class="stat-label">活跃用户数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-              <el-icon :size="32"><ChatDotRound /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-number">3,456</div>
-              <div class="stat-label">消息总数</div>
             </div>
           </div>
         </el-card>
@@ -118,7 +105,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { adminApi } from '@/api/admin'
+
+const postNumber = ref(0)
+const completedPostNumber = ref(0)
+const activeUsersNumber = ref(0)
 
 const locationData = ref([
   { rank: 1, location: '图书馆', count: 156 },
@@ -127,6 +119,30 @@ const locationData = ref([
   { rank: 4, location: '宿舍区', count: 87 },
   { rank: 5, location: '操场', count: 65 }
 ])
+
+const formatNumber = (num) => {
+  if (num === null || num === undefined) return '-'
+  return num.toLocaleString()
+}
+
+const loadStatistics = async () => {
+  try {
+    const [postRes, completedRes, activeRes] = await Promise.all([
+      adminApi.getPostNumber(),
+      adminApi.getCompletedPostNumber(),
+      adminApi.getActiveUsersNumber()
+    ])
+    postNumber.value = postRes.data || 0
+    completedPostNumber.value = completedRes.data || 0
+    activeUsersNumber.value = activeRes.data || 0
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
+
+onMounted(() => {
+  loadStatistics()
+})
 </script>
 
 <style scoped>

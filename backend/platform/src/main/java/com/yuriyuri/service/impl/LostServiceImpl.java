@@ -90,13 +90,6 @@ public class LostServiceImpl implements LostService {
             throw new BusinessException("无权修改他人的失物信息");
         }
 
-        //用户可以更新的有物品名、丢失的地方、丢失的时间、描述、图片
-        lostItem.setItemName(req.getItemName());
-        lostItem.setLostPlace(req.getLostPlace());
-        lostItem.setLostTime(req.getLostTime());
-        lostItem.setDescription(req.getDescription());
-        lostItem.setImageUrl(req.getImageUrl());
-
         LambdaUpdateWrapper<LostItem> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.
                 eq(LostItem::getId, id).
@@ -166,6 +159,7 @@ public class LostServiceImpl implements LostService {
      * @param req
      */
     @Override
+    @Transactional(rollbackFor =  Exception.class)
     public void reportPost(Long userId,ReportRequest req) {
         //类型如果是失物贴才能举报
         String type = req.getType();
@@ -219,6 +213,21 @@ public class LostServiceImpl implements LostService {
             throw new BusinessException("失物信息不存在");
         }
         return lostItem;
+    }
+
+    @Override
+    @Transactional(rollbackFor =  Exception.class)
+    public void confirmItem(Long id, Long userId) {
+        LostItem lostItem = checkInfoExist(id);
+        
+        if (!lostItem.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作他人的失物信息");
+        }
+        
+        LambdaUpdateWrapper<LostItem> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(LostItem::getId, id)
+                .set(LostItem::getStatus, 2);
+        lostMapper.update(updateWrapper);
     }
 
 }

@@ -10,5 +10,4 @@ public class UserLoginLog {
     private Long userId;
     private LocalDateTime loginTime;
     private LocalDateTime logoutTime;
-    private String ipAddress;
 }

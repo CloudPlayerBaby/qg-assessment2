@@ -43,11 +43,7 @@ const routes = [
         name: 'Profile',
         component: () => import('@/views/Profile.vue')
       },
-      {
-        path: 'messages',
-        name: 'Messages',
-        component: () => import('@/views/Messages.vue')
-      },
+
       {
         path: 'admin',
         name: 'Admin',

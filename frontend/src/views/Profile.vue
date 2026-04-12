@@ -97,12 +97,14 @@
                   <div class="lost-item-footer">
                     <div class="footer-left">
                       <el-tag v-if="item.status === -1" type="danger">已封禁</el-tag>
+                      <el-tag v-else-if="item.status === 2" type="success">已认领</el-tag>
                       <el-tag v-else-if="item.applyTop === 1" type="warning">置顶审核中</el-tag>
                       <el-tag v-else-if="item.applyTop === 2" type="success">置顶审核通过</el-tag>
                       <el-tag v-else-if="item.applyTop === -1" type="danger">置顶审核被驳回</el-tag>
                     </div>
                     <div class="footer-right">
-                      <el-button v-if="item.status !== -1" type="primary" size="small" @click.stop="handleEditLost(item)">编辑</el-button>
+                      <el-button v-if="item.status === 1" type="success" size="small" @click.stop="handleConfirmLost(item)">确认认领</el-button>
+                      <el-button v-if="item.status !== -1 && item.status !== 2" type="primary" size="small" @click.stop="handleEditLost(item)">编辑</el-button>
                       <el-button type="danger" size="small" @click.stop="handleDeleteLost(item)">删除</el-button>
                     </div>
                   </div>
@@ -155,12 +157,14 @@
                   <div class="found-item-footer">
                     <div class="footer-left">
                       <el-tag v-if="item.status === -1" type="danger">已封禁</el-tag>
+                      <el-tag v-else-if="item.status === 2" type="success">已认领</el-tag>
                       <el-tag v-else-if="item.applyTop === 1" type="warning">置顶审核中</el-tag>
                       <el-tag v-else-if="item.applyTop === 2" type="success">置顶审核通过</el-tag>
                       <el-tag v-else-if="item.applyTop === -1" type="danger">置顶审核被驳回</el-tag>
                     </div>
                     <div class="footer-right">
-                      <el-button v-if="item.status !== -1" type="primary" size="small" @click.stop="handleEditFound(item)">编辑</el-button>
+                      <el-button v-if="item.status === 1" type="success" size="small" @click.stop="handleConfirmFound(item)">确认认领</el-button>
+                      <el-button v-if="item.status !== -1 && item.status !== 2" type="primary" size="small" @click.stop="handleEditFound(item)">编辑</el-button>
                       <el-button type="danger" size="small" @click.stop="handleDeleteFound(item)">删除</el-button>
                     </div>
                   </div>
@@ -179,26 +183,97 @@
                 />
               </div>
             </el-tab-pane>
+
+            <el-tab-pane label="我的消息" name="messages">
+              <el-radio-group v-model="messageSubTab" class="msg-sub-tabs" @change="onMessageSubChange">
+                <el-radio-button label="comments">帖子留言</el-radio-button>
+                <el-radio-button label="private">私聊</el-radio-button>
+              </el-radio-group>
+
+              <div v-if="messageSubTab === 'comments'" class="message-list">
+                <div v-if="messageList.length === 0 && !loadingMessages" class="empty-tip">
+                  暂无消息内容
+                </div>
+                <el-card v-for="msg in messageList" :key="msg.id" class="message-item" :class="{ unread: msg.status === 0 }" shadow="hover" @click="handleMessageClick(msg)">
+                  <div class="message-header">
+                    <div class="message-sender">
+                      <el-badge is-dot :hidden="msg.status === 1">
+                        用户 {{ msg.senderId }} 给您留言了
+                      </el-badge>
+                    </div>
+                    <div class="message-time">{{ formatDateTime(msg.createTime) }}</div>
+                  </div>
+                  <div class="message-content">{{ msg.content }}</div>
+                  <div v-if="msg.contactInfo" class="message-contact">
+                    留言者留下的联系方式：{{ msg.contactInfo }}
+                  </div>
+                  <div class="message-footer">
+                    <el-button type="primary" link size="small" @click.stop="goToPost(msg)">查看原帖</el-button>
+                  </div>
+                </el-card>
+              </div>
+
+              <div v-else class="message-list" v-loading="loadingPrivateSessions">
+                <div v-if="privateSessions.length === 0 && !loadingPrivateSessions" class="empty-tip">
+                  暂无私聊会话，在帖子详情页可私聊发帖人
+                </div>
+                <el-card
+                  v-for="row in privateSessions"
+                  :key="row.sessionId"
+                  class="message-item"
+                  :class="{ unread: row.unreadCount > 0 }"
+                  shadow="hover"
+                  @click="openPrivateSession(row)"
+                >
+                  <div class="message-header">
+                    <div class="message-sender">
+                      <el-badge :value="row.unreadCount" :hidden="!row.unreadCount" :max="99">
+                        {{ row.peerDisplayName || ('用户 ' + row.peerId) }}
+                      </el-badge>
+                    </div>
+                    <div class="message-time">{{ formatDateTime(row.lastTime) }}</div>
+                  </div>
+                  <div class="message-content private-preview">{{ row.lastContent }}</div>
+                  <div class="message-footer">
+                    <el-tag size="small" type="info">{{ row.postType === 'lost' ? '失物' : '拾物' }} #{{ row.postId }}</el-tag>
+                    <el-button type="primary" link size="small" @click.stop="goToPostFromSession(row)">查看原帖</el-button>
+                  </div>
+                </el-card>
+              </div>
+            </el-tab-pane>
           </el-tabs>
         </el-card>
       </el-col>
     </el-row>
+
+    <PrivateChatDialog
+      v-model="chatVisible"
+      :session-id="chatSessionId"
+      :peer-name="chatPeerName"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { userApi } from '@/api/user'
 import { fileApi } from '@/api/file'
 import { lostApi } from '@/api/lost'
 import { foundApi } from '@/api/found'
+import { commentApi } from '@/api/comment'
+import { privateMessageApi } from '@/api/privateMessage'
+import PrivateChatDialog from '@/components/PrivateChatDialog.vue'
 import { useUserStore } from '@/stores/user'
+import { Plus } from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
-const userInfo = ref(null)
+const userInfo = computed(() => userStore.userInfo)
 const activeTab = ref('info')
 
 const profileForm = reactive({
@@ -227,6 +302,16 @@ const foundPageSize = ref(5)
 const foundTotal = ref(0)
 const loadingFound = ref(false)
 
+const messageList = ref([])
+const loadingMessages = ref(false)
+
+const messageSubTab = ref('comments')
+const privateSessions = ref([])
+const loadingPrivateSessions = ref(false)
+const chatVisible = ref(false)
+const chatSessionId = ref('')
+const chatPeerName = ref('')
+
 const loading = ref(false)
 const passwordLoading = ref(false)
 const uploadLoading = ref(false)
@@ -234,7 +319,6 @@ const uploadLoading = ref(false)
 const loadUserInfo = async () => {
   try {
     const res = await userApi.getUserInfo()
-    userInfo.value = res.data
     Object.assign(profileForm, res.data)
     userStore.setUserInfo(res.data)
   } catch (error) {
@@ -356,8 +440,70 @@ const handleDeleteFound = async (item) => {
   }
 }
 
+const handleConfirmLost = async (item) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要标记"${item.itemName}"为已认领吗？`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    await lostApi.confirmItem(item.id)
+    ElMessage.success('标记成功')
+    loadLostItems()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error(error)
+      if (error.response && error.response.data && error.response.data.message) {
+        ElMessage.error(error.response.data.message)
+      } else {
+        ElMessage.error('标记失败')
+      }
+    }
+  }
+}
+
+const handleConfirmFound = async (item) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要标记"${item.itemName}"为已认领吗？`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    await foundApi.confirmItem(item.id)
+    ElMessage.success('标记成功')
+    loadFoundItems()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error(error)
+      if (error.response && error.response.data && error.response.data.message) {
+        ElMessage.error(error.response.data.message)
+      } else {
+        ElMessage.error('标记失败')
+      }
+    }
+  }
+}
+
 onMounted(() => {
   loadUserInfo()
+  if (route.query.tab) {
+    activeTab.value = route.query.tab
+    handleTabChange(route.query.tab)
+  }
+})
+
+watch(chatVisible, (v) => {
+  if (!v && messageSubTab.value === 'private') {
+    loadPrivateSessions()
+  }
 })
 
 const handleAvatarChange = async (file) => {
@@ -426,12 +572,72 @@ const handleChangePassword = async () => {
   }
 }
 
-const handleTabChange = (tabName) => {
-  if (tabName === 'lost') {
+const handleTabChange = (name) => {
+  if (name === 'lost') {
     loadLostItems()
-  } else if (tabName === 'found') {
+  } else if (name === 'found') {
     loadFoundItems()
+  } else if (name === 'messages') {
+    loadMessages()
+    if (messageSubTab.value === 'private') {
+      loadPrivateSessions()
+    }
   }
+}
+
+const onMessageSubChange = () => {
+  if (messageSubTab.value === 'private') {
+    loadPrivateSessions()
+  }
+}
+
+const loadPrivateSessions = async () => {
+  loadingPrivateSessions.value = true
+  try {
+    const res = await privateMessageApi.getSessions()
+    privateSessions.value = res.data || []
+  } catch (error) {
+    console.error('加载私聊列表失败:', error)
+  } finally {
+    loadingPrivateSessions.value = false
+  }
+}
+
+const openPrivateSession = (row) => {
+  chatSessionId.value = row.sessionId
+  chatPeerName.value = row.peerDisplayName || '对方'
+  chatVisible.value = true
+}
+
+const goToPostFromSession = (row) => {
+  router.push(`/detail/${row.postType}/${row.postId}`)
+}
+
+const loadMessages = async () => {
+  loadingMessages.value = true
+  try {
+    const res = await commentApi.getMyMessages()
+    messageList.value = res.data
+  } catch (error) {
+    console.error('加载消息失败:', error)
+  } finally {
+    loadingMessages.value = false
+  }
+}
+
+const handleMessageClick = async (msg) => {
+  if (msg.status === 0) {
+    try {
+      await commentApi.markAsRead(msg.id)
+      msg.status = 1
+    } catch (error) {
+      console.error('标记已读失败:', error)
+    }
+  }
+}
+
+const goToPost = (msg) => {
+  router.push(`/detail/${msg.postType}/${msg.postId}`)
 }
 </script>
 
@@ -485,9 +691,8 @@ const handleTabChange = (tabName) => {
 
 .empty-tip {
   text-align: center;
-  padding: 60px 0;
+  padding: 40px;
   color: #909399;
-  font-size: 14px;
 }
 
 .lost-item,
@@ -557,5 +762,71 @@ const handleTabChange = (tabName) => {
   margin-top: 24px;
   display: flex;
   justify-content: center;
+}
+
+.msg-sub-tabs {
+  margin-bottom: 16px;
+}
+
+.message-list {
+  padding: 10px 0;
+}
+
+.private-preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-item {
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.message-item.unread {
+  border-left-color: #409eff;
+  background-color: #f0f7ff;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.message-sender {
+  font-weight: bold;
+  font-size: 15px;
+  color: #303133;
+}
+
+.message-time {
+  font-size: 13px;
+  color: #909399;
+}
+
+.message-content {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.message-contact {
+  font-size: 13px;
+  color: #e6a23c;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.message-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

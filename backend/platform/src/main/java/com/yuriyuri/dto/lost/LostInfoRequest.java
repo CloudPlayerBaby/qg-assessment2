@@ -19,6 +19,5 @@ public class LostInfoRequest {
 
     //图片是可选上传的
     private String imageUrl;
-
     private int applyTop;
 }
