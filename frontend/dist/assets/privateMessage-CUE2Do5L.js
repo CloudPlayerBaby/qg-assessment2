@@ -1,0 +1,1 @@
+import{r}from"./request-9SdNvWT4.js";const s={send(e){return r({url:"/privateMessage/send",method:"post",data:e})},list(e){return r({url:"/privateMessage/list",method:"get",params:e})},markRead(e){return r({url:"/privateMessage/read",method:"post",params:e})},getUnreadCount(){return r({url:"/privateMessage/unreadCount",method:"get"})}};export{s as p};

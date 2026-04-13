@@ -1,14 +1,116 @@
-2026-04-13T00:00:00.147+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-04-13T00:00:00.420+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@197a8723
-2026-04-13T00:00:00.424+08:00  INFO 28868 --- [scheduling-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-04-13T00:00:03.069+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-04-13T00:00:03.069+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-04-13T00:00:03.071+08:00  INFO 28868 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
-2026-04-13T00:00:03.302+08:00  INFO 28868 --- [http-nio-8080-exec-1] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已建立，用户ID: 1
-2026-04-13T00:00:10.088+08:00  INFO 28868 --- [http-nio-8080-exec-4] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已建立，用户ID: 5
-2026-04-13T00:03:05.648+08:00  INFO 28868 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
-2026-04-13T00:03:05.655+08:00  INFO 28868 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
-2026-04-13T00:03:05.662+08:00  INFO 28868 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-04-13T00:03:05.669+08:00  INFO 28868 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-04-13T00:03:05.674+08:00  INFO 28868 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已关闭，用户ID: 1
-2026-04-13T00:03:05.674+08:00  INFO 28868 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 私聊连接已关闭，用户ID: 5
+2026-04-14T00:18:50.569+08:00  INFO 42748 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback12.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:18:50.594+08:00  INFO 42748 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:18:50.598+08:00  INFO 42748 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapter match ch.qos.logback.classic.Logger success.
+2026-04-14T00:18:50.616+08:00  INFO 42748 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.log4j2.Log4j2NacosLoggingAdapterBuilder
+2026-04-14T00:18:50.962+08:00  INFO 42748 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 42748 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
+2026-04-14T00:18:50.963+08:00  INFO 42748 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-04-14T00:18:52.874+08:00  WARN 42748 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'com.alibaba.cloud.nacos.NacosConfigAutoConfiguration' of type [com.alibaba.cloud.nacos.NacosConfigAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [nacosAnnotationProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-04-14T00:18:52.883+08:00  WARN 42748 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigProperties' of type [com.alibaba.cloud.nacos.NacosConfigProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:18:53.006+08:00  INFO 42748 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2026-04-14T00:18:53.006+08:00  INFO 42748 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2026-04-14T00:18:53.009+08:00  WARN 42748 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigManager' of type [com.alibaba.cloud.nacos.NacosConfigManager] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:18:53.627+08:00  INFO 42748 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-14T00:18:53.651+08:00  INFO 42748 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-14T00:18:53.652+08:00  INFO 42748 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
+2026-04-14T00:18:53.766+08:00  INFO 42748 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-14T00:18:53.767+08:00  INFO 42748 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2730 ms
+2026-04-14T00:18:57.946+08:00  INFO 42748 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] Listening config for annotation: dataId=spring.ai.alibaba.configurable.prompt, group=DEFAULT_GROUP
+2026-04-14T00:18:57.966+08:00  INFO 42748 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] register configurablePromptTemplateFactory#method#onConfigChange(List) listener on com.alibaba.cloud.ai.prompt.ConfigurablePromptTemplateFactory@5c2ae7d7 
+2026-04-14T00:18:58.365+08:00  INFO 42748 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-04-14T00:18:58.395+08:00  INFO 42748 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 8.522 seconds (process running for 9.624)
+2026-04-14T00:18:59.008+08:00  INFO 42748 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-14T00:18:59.008+08:00  INFO 42748 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-14T00:18:59.011+08:00  INFO 42748 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-04-14T00:18:59.173+08:00  INFO 42748 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-14T00:18:59.529+08:00  INFO 42748 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@51a9d45b
+2026-04-14T00:18:59.531+08:00  INFO 42748 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-14T00:18:59.680+08:00  INFO 42748 --- [http-nio-8080-exec-1] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已连接，用户ID: 3
+2026-04-14T00:19:00.915+08:00  INFO 42748 --- [http-nio-8080-exec-4] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已断开，用户ID: 3
+2026-04-14T00:19:01.118+08:00  INFO 42748 --- [http-nio-8080-exec-5] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已连接，用户ID: 3
+2026-04-14T00:20:55.026+08:00  INFO 42748 --- [http-nio-8080-exec-2] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已断开，用户ID: 3
+2026-04-14T00:20:55.235+08:00  INFO 42748 --- [http-nio-8080-exec-4] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已连接，用户ID: 3
+2026-04-14T00:25:10.326+08:00  WARN 42748 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Start destroying ThreadPool
+2026-04-14T00:25:10.326+08:00  WARN 42748 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Start destroying common HttpClient
+2026-04-14T00:25:10.326+08:00  WARN 42748 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Start destroying Publisher
+2026-04-14T00:25:10.326+08:00  WARN 42748 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Destruction of the end
+2026-04-14T00:25:10.326+08:00  WARN 42748 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Destruction of the end
+2026-04-14T00:25:10.328+08:00  WARN 42748 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Destruction of the end
+2026-04-14T00:25:10.331+08:00  INFO 42748 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-14T00:25:10.341+08:00  INFO 42748 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-04-14T00:25:10.349+08:00  INFO 42748 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-14T00:25:10.359+08:00  INFO 42748 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-14T00:25:10.365+08:00  INFO 42748 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已断开，用户ID: 3
+2026-04-14T00:25:16.509+08:00  INFO 46524 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback12.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:25:16.519+08:00  INFO 46524 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:25:16.520+08:00  INFO 46524 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapter match ch.qos.logback.classic.Logger success.
+2026-04-14T00:25:16.532+08:00  INFO 46524 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.log4j2.Log4j2NacosLoggingAdapterBuilder
+2026-04-14T00:25:16.874+08:00  INFO 46524 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 46524 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
+2026-04-14T00:25:16.875+08:00  INFO 46524 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-04-14T00:25:18.527+08:00  WARN 46524 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'com.alibaba.cloud.nacos.NacosConfigAutoConfiguration' of type [com.alibaba.cloud.nacos.NacosConfigAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [nacosAnnotationProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-04-14T00:25:18.535+08:00  WARN 46524 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigProperties' of type [com.alibaba.cloud.nacos.NacosConfigProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:25:18.645+08:00  INFO 46524 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2026-04-14T00:25:18.645+08:00  INFO 46524 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2026-04-14T00:25:18.648+08:00  WARN 46524 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigManager' of type [com.alibaba.cloud.nacos.NacosConfigManager] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:25:19.249+08:00  INFO 46524 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-14T00:25:19.272+08:00  INFO 46524 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-14T00:25:19.272+08:00  INFO 46524 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
+2026-04-14T00:25:19.381+08:00  INFO 46524 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-14T00:25:19.381+08:00  INFO 46524 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2441 ms
+2026-04-14T00:25:22.902+08:00  INFO 46524 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] Listening config for annotation: dataId=spring.ai.alibaba.configurable.prompt, group=DEFAULT_GROUP
+2026-04-14T00:25:22.915+08:00  INFO 46524 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] register configurablePromptTemplateFactory#method#onConfigChange(List) listener on com.alibaba.cloud.ai.prompt.ConfigurablePromptTemplateFactory@68b3de47 
+2026-04-14T00:25:23.202+08:00  INFO 46524 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-04-14T00:25:23.223+08:00  INFO 46524 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 7.359 seconds (process running for 8.348)
+2026-04-14T00:25:25.329+08:00  INFO 46524 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-14T00:25:25.330+08:00  INFO 46524 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-14T00:25:25.331+08:00  INFO 46524 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-04-14T00:25:25.459+08:00  INFO 46524 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-14T00:25:25.710+08:00  INFO 46524 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@211a0798
+2026-04-14T00:25:25.713+08:00  INFO 46524 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-14T00:25:27.725+08:00  INFO 46524 --- [http-nio-8080-exec-3] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已连接，用户ID: 3
+2026-04-14T00:26:29.635+08:00  WARN 46524 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Start destroying Publisher
+2026-04-14T00:26:29.636+08:00  WARN 46524 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Start destroying common HttpClient
+2026-04-14T00:26:29.636+08:00  WARN 46524 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Destruction of the end
+2026-04-14T00:26:29.636+08:00  WARN 46524 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Start destroying ThreadPool
+2026-04-14T00:26:29.636+08:00  WARN 46524 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Destruction of the end
+2026-04-14T00:26:29.636+08:00  WARN 46524 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Destruction of the end
+2026-04-14T00:26:29.639+08:00  INFO 46524 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-14T00:26:29.649+08:00  INFO 46524 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-04-14T00:26:29.658+08:00  INFO 46524 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-14T00:26:29.664+08:00  INFO 46524 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-14T00:26:29.672+08:00  INFO 46524 --- [SpringApplicationShutdownHook] c.y.ws.PrivateChatWebSocketEndpoint      : WebSocket 已断开，用户ID: 3
+2026-04-14T00:26:35.861+08:00  INFO 7372 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback12.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:26:35.870+08:00  INFO 7372 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapterBuilder
+2026-04-14T00:26:35.872+08:00  INFO 7372 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapter match ch.qos.logback.classic.Logger success.
+2026-04-14T00:26:35.889+08:00  INFO 7372 --- [main] c.a.nacos.client.logging.NacosLogging    : Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.log4j2.Log4j2NacosLoggingAdapterBuilder
+2026-04-14T00:26:36.198+08:00  INFO 7372 --- [main] com.yuriyuri.PlatformApplication         : Starting PlatformApplication using Java 21.0.10 with PID 7372 (C:\Users\26567\IdeaProjects\qg-assessment2\backend\platform\target\classes started by 26567 in C:\Users\26567\IdeaProjects\qg-assessment2)
+2026-04-14T00:26:36.199+08:00  INFO 7372 --- [main] com.yuriyuri.PlatformApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-04-14T00:26:37.841+08:00  WARN 7372 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'com.alibaba.cloud.nacos.NacosConfigAutoConfiguration' of type [com.alibaba.cloud.nacos.NacosConfigAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [nacosAnnotationProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-04-14T00:26:37.849+08:00  WARN 7372 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigProperties' of type [com.alibaba.cloud.nacos.NacosConfigProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:26:37.951+08:00  INFO 7372 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2026-04-14T00:26:37.951+08:00  INFO 7372 --- [main] c.a.n.p.a.s.c.ClientAuthPluginManager    : [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2026-04-14T00:26:37.955+08:00  WARN 7372 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'nacosConfigManager' of type [com.alibaba.cloud.nacos.NacosConfigManager] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [nacosAnnotationProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-04-14T00:26:38.504+08:00  INFO 7372 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-14T00:26:38.526+08:00  INFO 7372 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-14T00:26:38.527+08:00  INFO 7372 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
+2026-04-14T00:26:38.638+08:00  INFO 7372 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-14T00:26:38.639+08:00  INFO 7372 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2380 ms
+2026-04-14T00:26:42.688+08:00  INFO 7372 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] Listening config for annotation: dataId=spring.ai.alibaba.configurable.prompt, group=DEFAULT_GROUP
+2026-04-14T00:26:42.706+08:00  INFO 7372 --- [main] c.a.c.n.a.NacosAnnotationProcessor       : [Nacos Config] register configurablePromptTemplateFactory#method#onConfigChange(List) listener on com.alibaba.cloud.ai.prompt.ConfigurablePromptTemplateFactory@7d108063 
+2026-04-14T00:26:43.041+08:00  INFO 7372 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-04-14T00:26:43.064+08:00  INFO 7372 --- [main] com.yuriyuri.PlatformApplication         : Started PlatformApplication in 7.836 seconds (process running for 8.802)
+2026-04-14T00:26:43.296+08:00  INFO 7372 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-14T00:26:43.297+08:00  INFO 7372 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-14T00:26:43.299+08:00  INFO 7372 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-04-14T00:26:43.449+08:00  INFO 7372 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-14T00:26:43.734+08:00  INFO 7372 --- [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7bf7773f
+2026-04-14T00:26:43.737+08:00  INFO 7372 --- [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-14T00:27:47.872+08:00  WARN 7372 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Start destroying Publisher
+2026-04-14T00:27:47.872+08:00  WARN 7372 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Start destroying ThreadPool
+2026-04-14T00:27:47.872+08:00  WARN 7372 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Start destroying common HttpClient
+2026-04-14T00:27:47.872+08:00  WARN 7372 --- [Thread-16] c.a.nacos.common.notify.NotifyCenter     : [NotifyCenter] Destruction of the end
+2026-04-14T00:27:47.873+08:00  WARN 7372 --- [Thread-1] c.a.n.common.executor.ThreadPoolManager  : [ThreadPoolManager] Destruction of the end
+2026-04-14T00:27:47.873+08:00  WARN 7372 --- [Thread-14] c.a.n.common.http.HttpClientBeanHolder   : [HttpClientBeanHolder] Destruction of the end
+2026-04-14T00:27:47.875+08:00  INFO 7372 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-14T00:27:47.886+08:00  INFO 7372 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-04-14T00:27:47.894+08:00  INFO 7372 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-14T00:27:47.902+08:00  INFO 7372 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

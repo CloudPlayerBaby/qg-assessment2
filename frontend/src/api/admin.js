@@ -156,5 +156,12 @@ export const adminApi = {
       url: '/admin/admin/statistics/active-users-count',
       method: 'get'
     })
+  },
+
+  getAiAnalysisReport() {
+    return request({
+      url: '/admin/admin/statistics/ai-analysis',
+      method: 'get'
+    })
   }
 }

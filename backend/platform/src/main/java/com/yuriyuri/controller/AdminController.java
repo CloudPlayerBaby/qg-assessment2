@@ -18,6 +18,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
@@ -173,5 +175,21 @@ public class AdminController {
         return Result.success(activeUsersNumber);
     }
 
+    @Autowired
+    private com.yuriyuri.service.AiService aiService;
+
+    @GetMapping("/admin/statistics/ai-analysis")
+    @Operation(summary = "获取AI数据分析报告")
+    public Result<String> getAiAnalysisReport() {
+        LocalDateTime startTime = LocalDateTime.now().minusDays(7);
+        List<Map<String, Object>> lostPlaceStatistics = adminService.getLostPlaceStatistics(startTime);
+        List<Map<String, Object>> lostItemStatistics = adminService.getLostItemStatistics(startTime);
+        List<Map<String, Object>> foundPlaceStatistics = adminService.getFoundPlaceStatistics(startTime);
+        List<Map<String, Object>> foundItemStatistics = adminService.getFoundItemStatistics(startTime);
+
+        String report = aiService.generateAnalysisReport(
+                lostPlaceStatistics, lostItemStatistics, foundPlaceStatistics, foundItemStatistics);
+        return Result.success(report);
+    }
 
 }

@@ -11,6 +11,8 @@ import com.yuriyuri.entity.Report;
 import com.yuriyuri.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public interface AdminService {
     //处理置顶内容
@@ -55,4 +57,16 @@ public interface AdminService {
     Long getPostNumber();
     Long getCompletedPostNumber();
     Long getActiveUsersNumber(LocalDateTime startTime);
+
+    //获取7天内失物地点统计
+    List<Map<String, Object>> getLostPlaceStatistics(LocalDateTime startTime);
+
+    //获取7天内失物物品统计
+    List<Map<String, Object>> getLostItemStatistics(LocalDateTime startTime);
+
+    //获取7天内拾物地点统计
+    List<Map<String, Object>> getFoundPlaceStatistics(LocalDateTime startTime);
+
+    //获取7天内拾物物品统计
+    List<Map<String, Object>> getFoundItemStatistics(LocalDateTime startTime);
 }

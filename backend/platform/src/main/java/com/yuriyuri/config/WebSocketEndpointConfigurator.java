@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.websocket.server.ServerEndpointConfig;
 
+//让 Spring 接管端点的实例化，使得依赖注入生效
 @Component
 public class WebSocketEndpointConfigurator extends ServerEndpointConfig.Configurator implements ApplicationContextAware {
 

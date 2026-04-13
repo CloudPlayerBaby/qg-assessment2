@@ -1,0 +1,1 @@
+import{r as t}from"./request-9SdNvWT4.js";const n={addComment:e=>t.post("/comment/add",e),getComments:(e,m)=>t.get("/comment/get",{params:{postId:e,postType:m}}),getUnreadCount:()=>t.get("/comment/unreadCount"),getMyMessages:()=>t.get("/comment/myMessages"),markAsRead:e=>t.post("/comment/read",null,{params:{commentId:e}})};export{n as c};

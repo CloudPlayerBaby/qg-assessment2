@@ -20,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
-import java.util.prefs.BackingStoreException;
+import java.util.Map;
+import java.util.ArrayList;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -335,6 +337,103 @@ public class AdminServiceImpl implements AdminService {
         return userLoginLogMapper.countDistinctUserId(startTime, endTime);
     }
 
+    /**
+     * 获取7天内失物地点统计
+     */
+    @Override
+    public List<Map<String, Object>> getLostPlaceStatistics(LocalDateTime startTime) {
+        //从数据库获取七天内的数据，不包括被封禁的
+        LambdaQueryWrapper<LostItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(LostItem::getCreateTime, startTime)
+                .ne(LostItem::getStatus, -1);
+        List<LostItem> items = lostMapper.selectList(wrapper);
+
+        //key为lostPlace，value为对应lostPlace的count
+        Map<String, Long> countMap = new HashMap<>();
+        //遍历该map
+        for (LostItem item : items) {
+            String place = item.getLostPlace();
+            if (countMap.containsKey(place)) {
+                //如果包含则+1
+                countMap.put(place, countMap.get(place) + 1);
+            } else {
+                //不包含则创建一个1
+                countMap.put(place, 1L);
+            }
+        }
+        
+        return buildStatistics(countMap, "location");
+    }
+
+    /**
+     * 获取7天内失物物品统计
+     */
+    @Override
+    public List<Map<String, Object>> getLostItemStatistics(LocalDateTime startTime) {
+        LambdaQueryWrapper<LostItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(LostItem::getCreateTime, startTime)
+                .ne(LostItem::getStatus, -1);
+        List<LostItem> items = lostMapper.selectList(wrapper);
+        
+        Map<String, Long> countMap = new HashMap<>();
+        for (LostItem item : items) {
+            String itemName = item.getItemName();
+            if (countMap.containsKey(itemName)) {
+                countMap.put(itemName, countMap.get(itemName) + 1);
+            } else {
+                countMap.put(itemName, 1L);
+            }
+        }
+        
+        return buildStatistics(countMap, "item");
+    }
+
+    /**
+     * 获取7天内拾物地点统计
+     */
+    @Override
+    public List<Map<String, Object>> getFoundPlaceStatistics(LocalDateTime startTime) {
+        LambdaQueryWrapper<FoundItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(FoundItem::getCreateTime, startTime)
+                .ne(FoundItem::getStatus, -1);
+        List<FoundItem> items = foundMapper.selectList(wrapper);
+        
+        Map<String, Long> countMap = new HashMap<>();
+        for (FoundItem item : items) {
+            String place = item.getFoundPlace();
+            if (countMap.containsKey(place)) {
+                countMap.put(place, countMap.get(place) + 1);
+            } else {
+                countMap.put(place, 1L);
+            }
+        }
+        
+        return buildStatistics(countMap, "location");
+    }
+
+    /**
+     * 获取7天内拾物物品统计
+     */
+    @Override
+    public List<Map<String, Object>> getFoundItemStatistics(LocalDateTime startTime) {
+        LambdaQueryWrapper<FoundItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(FoundItem::getCreateTime, startTime)
+                .ne(FoundItem::getStatus, -1);
+        List<FoundItem> items = foundMapper.selectList(wrapper);
+        
+        Map<String, Long> countMap = new HashMap<>();
+        for (FoundItem item : items) {
+            String itemName = item.getItemName();
+            if (countMap.containsKey(itemName)) {
+                countMap.put(itemName, countMap.get(itemName) + 1);
+            } else {
+                countMap.put(itemName, 1L);
+            }
+        }
+        
+        return buildStatistics(countMap, "item");
+    }
+
     //以下为方法
 
     //改变用户的状态，可以是封禁也可以是解禁
@@ -374,5 +473,24 @@ public class AdminServiceImpl implements AdminService {
                     .set(FoundItem::getStatus, status);
             foundMapper.update(wrapper2);
         }
+    }
+
+    //返回一个List，这个List包含着多个Map
+    private List<Map<String, Object>> buildStatistics(Map<String, Long> countMap, String keyName) {
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        //遍历Map集合
+        for (Map.Entry<String, Long> entry : countMap.entrySet()) {
+            Map<String, Object> map = new HashMap<>();
+            //keyName即为形参传来的，用于分类的名字
+            map.put(keyName, entry.getKey());
+            //count即为在上面重写方法里查询到的数量
+            map.put("count", entry.getValue());
+            //每一个Map都是类似{"location": "图书馆", "count": 156}的格式
+            result.add(map);
+        }
+
+        //最后的result大概长这样：[{"location": "图书馆", "count": 156}, {"location": "第一食堂", "count": 134}]
+        return result;
     }
 }

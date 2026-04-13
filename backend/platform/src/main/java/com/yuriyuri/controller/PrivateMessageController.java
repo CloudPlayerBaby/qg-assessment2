@@ -1,14 +1,11 @@
 package com.yuriyuri.controller;
 
 import com.yuriyuri.common.Result;
-import com.yuriyuri.dto.message.PrivateMessageVO;
-import com.yuriyuri.dto.message.PrivateSessionRequest;
-import com.yuriyuri.dto.message.PrivateSessionSummaryVO;
-import com.yuriyuri.dto.message.PrivateSessionVO;
+import com.yuriyuri.dto.message.PrivateChatRow;
+import com.yuriyuri.dto.message.PrivateMessageSendRequest;
+import com.yuriyuri.entity.PrivateMessage;
 import com.yuriyuri.service.PrivateMessageService;
 import com.yuriyuri.util.ThreadLocalUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "私信相关",description = "获取会话、会话历史等接口")
 @RestController
 @RequestMapping("/privateMessage")
 public class PrivateMessageController {
@@ -24,40 +20,46 @@ public class PrivateMessageController {
     @Autowired
     private PrivateMessageService privateMessageService;
 
-    @PostMapping("/session")
-    public Result<PrivateSessionVO> ensureSession(@Valid @RequestBody PrivateSessionRequest req) {
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Long userId = ((Number) claims.get("id")).longValue();
-        return Result.success(privateMessageService.ensureSession(userId, req));
+    @PostMapping("/send")
+    public Result<String> send(@Valid @RequestBody PrivateMessageSendRequest req) {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        privateMessageService.send(userId, req);
+        return Result.success("发送成功");
     }
 
-    @GetMapping("/history")
-    public Result<List<PrivateMessageVO>> history(@RequestParam String sessionId) {
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Long userId = ((Number) claims.get("id")).longValue();
-        return Result.success(privateMessageService.listHistory(userId, sessionId));
+    @GetMapping("/list")
+    public Result<List<PrivateMessage>> list(
+            @RequestParam Long postId,
+            @RequestParam String postType,
+            @RequestParam Long peerId) {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        return Result.success(privateMessageService.list(userId, postId, postType, peerId));
     }
 
     @PostMapping("/read")
-    public Result<String> markRead(@RequestParam String sessionId) {
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Long userId = ((Number) claims.get("id")).longValue();
-        privateMessageService.markSessionRead(userId, sessionId);
-        return Result.success("已标记已读");
+    public Result<String> read(
+            @RequestParam Long postId,
+            @RequestParam String postType,
+            @RequestParam Long peerId) {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        privateMessageService.markRead(userId, postId, postType, peerId);
+        return Result.success("已读");
     }
 
     @GetMapping("/unreadCount")
-    @Operation(summary = "获取未读数量")
     public Result<Long> unreadCount() {
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Long userId = ((Number) claims.get("id")).longValue();
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
         return Result.success(privateMessageService.countUnread(userId));
     }
 
-    @GetMapping("/sessions")
-    public Result<List<PrivateSessionSummaryVO>> sessions() {
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Long userId = ((Number) claims.get("id")).longValue();
-        return Result.success(privateMessageService.listSessionSummaries(userId));
+    @GetMapping("/conversations")
+    public Result<List<PrivateChatRow>> conversations() {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = ((Number) map.get("id")).longValue();
+        return Result.success(privateMessageService.myChats(userId));
     }
 }

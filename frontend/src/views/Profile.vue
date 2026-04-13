@@ -192,7 +192,7 @@
 
               <div v-if="messageSubTab === 'comments'" class="message-list">
                 <div v-if="messageList.length === 0 && !loadingMessages" class="empty-tip">
-                  暂无消息内容
+                  暂无留言
                 </div>
                 <el-card v-for="msg in messageList" :key="msg.id" class="message-item" :class="{ unread: msg.status === 0 }" shadow="hover" @click="handleMessageClick(msg)">
                   <div class="message-header">
@@ -213,22 +213,22 @@
                 </el-card>
               </div>
 
-              <div v-else class="message-list" v-loading="loadingPrivateSessions">
-                <div v-if="privateSessions.length === 0 && !loadingPrivateSessions" class="empty-tip">
-                  暂无私聊会话，在帖子详情页可私聊发帖人
+              <div v-else class="message-list" v-loading="loadingPrivateList">
+                <div v-if="privateList.length === 0 && !loadingPrivateList" class="empty-tip">
+                  暂无私聊记录，请到帖子详情页点击「私聊发帖人」开始对话
                 </div>
                 <el-card
-                  v-for="row in privateSessions"
-                  :key="row.sessionId"
+                  v-for="row in privateList"
+                  :key="`${row.postType}-${row.postId}-${row.peerId}`"
                   class="message-item"
                   :class="{ unread: row.unreadCount > 0 }"
                   shadow="hover"
-                  @click="openPrivateSession(row)"
+                  @click="openPrivateChat(row)"
                 >
                   <div class="message-header">
                     <div class="message-sender">
                       <el-badge :value="row.unreadCount" :hidden="!row.unreadCount" :max="99">
-                        {{ row.peerDisplayName || ('用户 ' + row.peerId) }}
+                        与 {{ row.peerName || ('用户' + row.peerId) }} 的私信
                       </el-badge>
                     </div>
                     <div class="message-time">{{ formatDateTime(row.lastTime) }}</div>
@@ -236,7 +236,7 @@
                   <div class="message-content private-preview">{{ row.lastContent }}</div>
                   <div class="message-footer">
                     <el-tag size="small" type="info">{{ row.postType === 'lost' ? '失物' : '拾物' }} #{{ row.postId }}</el-tag>
-                    <el-button type="primary" link size="small" @click.stop="goToPostFromSession(row)">查看原帖</el-button>
+                    <el-button type="primary" link size="small" @click.stop="goToPostPrivate(row)">查看原帖</el-button>
                   </div>
                 </el-card>
               </div>
@@ -248,7 +248,9 @@
 
     <PrivateChatDialog
       v-model="chatVisible"
-      :session-id="chatSessionId"
+      :post-id="chatPostId"
+      :post-type="chatPostType"
+      :peer-id="chatPeerId"
       :peer-name="chatPeerName"
     />
   </div>
@@ -306,10 +308,12 @@ const messageList = ref([])
 const loadingMessages = ref(false)
 
 const messageSubTab = ref('comments')
-const privateSessions = ref([])
-const loadingPrivateSessions = ref(false)
+const privateList = ref([])
+const loadingPrivateList = ref(false)
 const chatVisible = ref(false)
-const chatSessionId = ref('')
+const chatPostId = ref(null)
+const chatPostType = ref('')
+const chatPeerId = ref(null)
 const chatPeerName = ref('')
 
 const loading = ref(false)
@@ -500,12 +504,6 @@ onMounted(() => {
   }
 })
 
-watch(chatVisible, (v) => {
-  if (!v && messageSubTab.value === 'private') {
-    loadPrivateSessions()
-  }
-})
-
 const handleAvatarChange = async (file) => {
   if (file.raw) {
     uploadLoading.value = true
@@ -580,36 +578,38 @@ const handleTabChange = (name) => {
   } else if (name === 'messages') {
     loadMessages()
     if (messageSubTab.value === 'private') {
-      loadPrivateSessions()
+      loadPrivateList()
     }
   }
 }
 
 const onMessageSubChange = () => {
   if (messageSubTab.value === 'private') {
-    loadPrivateSessions()
+    loadPrivateList()
   }
 }
 
-const loadPrivateSessions = async () => {
-  loadingPrivateSessions.value = true
-  try {
-    const res = await privateMessageApi.getSessions()
-    privateSessions.value = res.data || []
-  } catch (error) {
-    console.error('加载私聊列表失败:', error)
-  } finally {
-    loadingPrivateSessions.value = false
-  }
+const loadPrivateList = () => {
+  loadingPrivateList.value = true
+  privateMessageApi
+    .getConversations()
+    .then((res) => {
+      privateList.value = res.data || []
+    })
+    .finally(() => {
+      loadingPrivateList.value = false
+    })
 }
 
-const openPrivateSession = (row) => {
-  chatSessionId.value = row.sessionId
-  chatPeerName.value = row.peerDisplayName || '对方'
+const openPrivateChat = (row) => {
+  chatPostId.value = row.postId
+  chatPostType.value = row.postType
+  chatPeerId.value = row.peerId
+  chatPeerName.value = row.peerName || '对方'
   chatVisible.value = true
 }
 
-const goToPostFromSession = (row) => {
+const goToPostPrivate = (row) => {
   router.push(`/detail/${row.postType}/${row.postId}`)
 }
 
@@ -639,6 +639,12 @@ const handleMessageClick = async (msg) => {
 const goToPost = (msg) => {
   router.push(`/detail/${msg.postType}/${msg.postId}`)
 }
+
+watch(chatVisible, (v) => {
+  if (!v && messageSubTab.value === 'private') {
+    loadPrivateList()
+  }
+})
 </script>
 
 <style scoped>

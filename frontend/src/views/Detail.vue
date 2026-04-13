@@ -132,7 +132,9 @@
 
     <PrivateChatDialog
       v-model="chatVisible"
-      :session-id="chatSessionId"
+      :post-id="chatPostId"
+      :post-type="chatPostType"
+      :peer-id="chatPeerId"
       :peer-name="chatPeerName"
     />
   </div>
@@ -147,7 +149,7 @@ import PrivateChatDialog from '@/components/PrivateChatDialog.vue'
 import { lostApi } from '@/api/lost'
 import { foundApi } from '@/api/found'
 import { commentApi } from '@/api/comment'
-import { privateMessageApi } from '@/api/privateMessage'
+import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -179,7 +181,9 @@ const isLoggedIn = computed(() => userStore.isLoggedIn)
 const currentUserId = computed(() => userStore.userInfo?.id)
 
 const chatVisible = ref(false)
-const chatSessionId = ref('')
+const chatPostId = ref(null)
+const chatPostType = ref('')
+const chatPeerId = ref(null)
 const chatPeerName = ref('')
 
 const canPrivateChat = computed(() => {
@@ -267,7 +271,7 @@ const showReportDialog = () => {
   reportDialogVisible.value = true
 }
 
-const openPrivateChat = async () => {
+const openPrivateChat = () => {
   if (!isLoggedIn.value) {
     ElMessage.warning('请先登录')
     router.push('/login')
@@ -277,19 +281,13 @@ const openPrivateChat = async () => {
     ElMessage.warning('无法发起私聊')
     return
   }
-  try {
-    const res = await privateMessageApi.ensureSession({
-      postId: Number(route.params.id),
-      postType: type.value,
-      peerId: item.value.userId
-    })
-    chatSessionId.value = res.data.sessionId
-    chatPeerName.value = res.data.peerDisplayName || '发帖人'
+  chatPostId.value = Number(route.params.id)
+  chatPostType.value = type.value
+  chatPeerId.value = item.value.userId
+  userApi.getUserInfoById(item.value.userId).then((res) => {
+    chatPeerName.value = res.data.nickname || res.data.username || '发帖人'
     chatVisible.value = true
-  } catch (error) {
-    console.error(error)
-    ElMessage.error(error.message || '无法发起私聊')
-  }
+  })
 }
 
 const submitReport = async () => {

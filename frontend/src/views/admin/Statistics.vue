@@ -43,60 +43,24 @@
     </el-row>
 
     <el-row :gutter="24" style="margin-top: 24px;">
-      <el-col :span="12">
+      <el-col :span="24">
         <el-card>
           <template #header>
-            <span>近7天发布趋势</span>
-          </template>
-          <div class="chart-placeholder">
-            <el-empty description="图表区域" />
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <span>物品类型分布</span>
-          </template>
-          <div class="chart-placeholder">
-            <el-empty description="图表区域" />
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="24" style="margin-top: 24px;">
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <span>热门地点</span>
-          </template>
-          <el-table :data="locationData" style="width: 100%">
-            <el-table-column prop="rank" label="排名" width="80" align="center">
-              <template #default="{ row }">
-                <el-tag v-if="row.rank <= 3" :type="row.rank === 1 ? 'danger' : row.rank === 2 ? 'warning' : 'success'">
-                  {{ row.rank }}
-                </el-tag>
-                <span v-else>{{ row.rank }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="location" label="地点" />
-            <el-table-column prop="count" label="数量" />
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <span>AI分析报告</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span>AI分析报告</span>
+              <el-button type="primary" size="small" @click="loadAiReport" :loading="generatingReport">
+                <el-icon><MagicStick /></el-icon>
+                生成分析报告
+              </el-button>
+            </div>
           </template>
           <div class="ai-report">
-            <p>📊 根据近7天的数据统计：</p>
-            <ul>
-              <li>图书馆是失物高发区域，占比28%</li>
-              <li>证件类物品最容易丢失，其次是电子设备</li>
-              <li>中午12:00-13:00和下午17:00-18:00是丢失高峰期</li>
-            </ul>
+            <p v-if="!aiReport" style="color: #909399; text-align: center; padding: 40px;">
+              点击上方按钮生成AI分析报告
+            </p>
+            <div v-else style="white-space: pre-wrap; line-height: 1.8;">
+              {{ aiReport }}
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -107,18 +71,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { adminApi } from '@/api/admin'
+import { MagicStick, Document, CircleCheck, User } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const postNumber = ref(0)
 const completedPostNumber = ref(0)
 const activeUsersNumber = ref(0)
-
-const locationData = ref([
-  { rank: 1, location: '图书馆', count: 156 },
-  { rank: 2, location: '第一食堂', count: 134 },
-  { rank: 3, location: '教学楼A座', count: 98 },
-  { rank: 4, location: '宿舍区', count: 87 },
-  { rank: 5, location: '操场', count: 65 }
-])
+const aiReport = ref('')
+const generatingReport = ref(false)
 
 const formatNumber = (num) => {
   if (num === null || num === undefined) return '-'
@@ -137,6 +97,20 @@ const loadStatistics = async () => {
     activeUsersNumber.value = activeRes.data || 0
   } catch (error) {
     console.error('加载统计数据失败:', error)
+  }
+}
+
+const loadAiReport = async () => {
+  generatingReport.value = true
+  try {
+    const res = await adminApi.getAiAnalysisReport()
+    aiReport.value = res.data || ''
+    ElMessage.success('分析报告生成成功')
+  } catch (error) {
+    console.error('生成AI分析报告失败:', error)
+    ElMessage.error('生成分析报告失败')
+  } finally {
+    generatingReport.value = false
   }
 }
 
@@ -192,17 +166,11 @@ onMounted(() => {
   color: #909399;
 }
 
-.chart-placeholder {
-  height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .ai-report {
   padding: 16px;
   background-color: #f5f7fa;
   border-radius: 8px;
+  min-height: 200px;
 }
 
 .ai-report p {

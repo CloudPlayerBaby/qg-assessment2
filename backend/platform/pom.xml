@@ -28,8 +28,16 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <spring-ai.version>1.0.0-M5</spring-ai.version>
+        <spring-ai-alibaba.version>1.0.0-M3.2</spring-ai-alibaba.version>
     </properties>
     <dependencies>
+        <!--引入 Spring AI Alibaba-->
+        <dependency>
+            <groupId>com.alibaba.cloud.ai</groupId>
+            <artifactId>spring-ai-alibaba-starter</artifactId>
+            <version>${spring-ai-alibaba.version}</version>
+        </dependency>
         <!--引入 swagger-->
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -163,5 +171,21 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>alibaba-milestones</id>
+            <name>Alibaba Milestones</name>
+            <url>https://maven.aliyun.com/repository/spring-milestones</url>
+        </repository>
+    </repositories>
 
 </project>

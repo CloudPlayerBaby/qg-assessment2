@@ -1,1 +1,0 @@
-import{r as e}from"./request-Bf22vxfP.js";const r={upload(a){const t=new FormData;return t.append("file",a),e({url:"/upload",method:"post",data:t,headers:{"Content-Type":"multipart/form-data"}})}};export{r as f};

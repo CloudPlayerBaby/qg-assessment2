@@ -1,4 +1,10 @@
 spring:
+  ai:
+    dashscope:
+      api-key: sk-c6d8d8b3b24b4715a88c811ec61e2ab7
+      chat:
+        options:
+          model: qwen-plus
   datasource:
     url: jdbc:mysql://localhost:3306/platform?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root

@@ -13,7 +13,6 @@ import com.yuriyuri.mapper.LostMapper;
 import com.yuriyuri.service.CommentService;
 import com.yuriyuri.ws.WebSocketSessionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,6 +43,7 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 发表评论
+     *
      * @param userId
      * @param req
      */
@@ -72,25 +72,28 @@ public class CommentServiceImpl implements CommentService {
         comment.setCreateTime(LocalDateTime.now());
         comment.setUpdateTime(LocalDateTime.now());
         commentMapper.insert(comment);
-        notifyReceiverNewComment(receiverId, req);
-    }
 
-    @SneakyThrows
-    private void notifyReceiverNewComment(Long receiverId, CommentRequest req) {
+        //发送实时消息进行评论预览
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("type", "newComment");
         payload.put("postId", req.getPostId());
         payload.put("postType", req.getPostType());
         String preview = req.getContent() == null ? "" : req.getContent();
+        //预览不能大于80字
         if (preview.length() > 80) {
             preview = preview.substring(0, 80) + "...";
         }
         payload.put("preview", preview);
-        webSocketSessionRegistry.sendText(receiverId, objectMapper.writeValueAsString(payload));
+        try {
+            //转为json
+            webSocketSessionRegistry.sendText(receiverId, objectMapper.writeValueAsString(payload));
+        } catch (Exception ignored) {
+        }
     }
 
     /**
      * 获取帖子的评论
+     *
      * @param postId
      * @param postType
      * @return
@@ -106,6 +109,7 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 获取未读消息数量
+     *
      * @param userId
      * @return
      */
@@ -119,6 +123,7 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 获取我的消息（评论）
+     *
      * @param userId
      * @return
      */
@@ -132,6 +137,7 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 标记消息为已读
+     *
      * @param commentId
      */
     @Override

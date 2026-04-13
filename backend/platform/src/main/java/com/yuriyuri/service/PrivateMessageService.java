@@ -1,23 +1,19 @@
 package com.yuriyuri.service;
 
-import com.yuriyuri.dto.message.PrivateMessageVO;
-import com.yuriyuri.dto.message.PrivateSessionRequest;
-import com.yuriyuri.dto.message.PrivateSessionSummaryVO;
-import com.yuriyuri.dto.message.PrivateSessionVO;
+import com.yuriyuri.dto.message.PrivateChatRow;
+import com.yuriyuri.dto.message.PrivateMessageSendRequest;
+import com.yuriyuri.entity.PrivateMessage;
 
 import java.util.List;
 
 public interface PrivateMessageService {
-
-    PrivateSessionVO ensureSession(Long userId, PrivateSessionRequest req);
-
-    List<PrivateMessageVO> listHistory(Long userId, String sessionId);
-
-    void markSessionRead(Long userId, String sessionId);
-
+    //流程：发送私信->session获取用户是否在线
+    //1.是->推送信息->可在线聊天
+    //2.否->推送信息
+    //其余逻辑与CommentService一致
+    void send(Long senderId, PrivateMessageSendRequest req);
+    List<PrivateMessage> list(Long userId, Long postId, String postType, Long peerId);
+    void markRead(Long userId, Long postId, String postType, Long peerId);
     Long countUnread(Long userId);
-
-    List<PrivateSessionSummaryVO> listSessionSummaries(Long userId);
-
-    PrivateMessageVO sendMessage(Long senderId, String sessionId, String content);
+    List<PrivateChatRow> myChats(Long userId);
 }

@@ -22,6 +22,9 @@
               <el-icon :size="20"><ChatDotRound /></el-icon>
             </el-badge>
           </div>
+          <div v-if="isLoggedIn" class="ai-assistant-container" @click="showAiDialog = true">
+            <el-icon :size="20"><MagicStick /></el-icon>
+          </div>
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :size="32" :src="userInfo?.avatarUrl">
@@ -52,18 +55,49 @@
     <el-main class="layout-main">
       <router-view />
     </el-main>
+
+    <!-- AI 助手对话框 -->
+    <el-dialog
+      v-model="showAiDialog"
+      title="AI 校园小助手"
+      width="500px"
+      :close-on-click-modal="false"
+      class="ai-dialog"
+    >
+      <div class="ai-chat-history" ref="chatHistoryRef">
+        <div v-for="(msg, index) in aiChatHistory" :key="index" :class="['chat-bubble', msg.role]">
+          <div class="bubble-content">{{ msg.content }}</div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="ai-input-wrapper">
+          <el-input
+            v-model="aiInput"
+            placeholder="问问我失物招领相关问题吧..."
+            @keyup.enter="handleAiChat"
+            :disabled="aiLoading"
+          >
+            <template #append>
+              <el-button @click="handleAiChat" :loading="aiLoading">
+                发送
+              </el-button>
+            </template>
+          </el-input>
+        </div>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound } from '@element-plus/icons-vue'
+import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound, MagicStick } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { commentApi } from '@/api/comment'
 import { privateMessageApi } from '@/api/privateMessage'
-import { setChatSocket } from '@/utils/chatSocket'
+import request from '@/utils/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -76,6 +110,43 @@ const activeMenu = computed(() => route.path)
 
 const unreadCount = ref(0)
 let timer = null
+
+// AI 助手相关
+const showAiDialog = ref(false)
+const aiInput = ref('')
+const aiLoading = ref(false)
+const aiChatHistory = ref([
+  { role: 'ai', content: '你好！我是你的失物招领小助手，有什么可以帮你的吗？' }
+])
+const chatHistoryRef = ref(null)
+
+const handleAiChat = async () => {
+  if (!aiInput.value.trim() || aiLoading.value) return
+  
+  const userMsg = aiInput.value.trim()
+  aiChatHistory.value.push({ role: 'user', content: userMsg })
+  aiInput.value = ''
+  aiLoading.value = true
+  
+  scrollToBottom()
+
+  try {
+    const res = await request.get('/ai/chat', { params: { message: userMsg } })
+    aiChatHistory.value.push({ role: 'ai', content: res.data })
+  } catch (error) {
+    aiChatHistory.value.push({ role: 'ai', content: '抱歉，小助手现在开小差了，请稍后再试。' })
+  } finally {
+    aiLoading.value = false
+    scrollToBottom()
+  }
+}
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatHistoryRef.value) {
+    chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight
+  }
+}
 let ws = null
 
 const fetchUnreadTotal = async () => {
@@ -105,14 +176,12 @@ function disconnectWs() {
     ws.close()
     ws = null
   }
-  setChatSocket(null)
 }
 
 function connectWs() {
   disconnectWs()
   if (!isLoggedIn.value) return
   ws = new WebSocket(buildWsUrl())
-  setChatSocket(ws)
   ws.onmessage = (ev) => {
     const d = JSON.parse(ev.data)
     window.dispatchEvent(new CustomEvent('ws-chat', { detail: d }))
@@ -122,14 +191,12 @@ function connectWs() {
         message: d.preview || '有人给您的帖子留言了'
       })
       fetchUnreadTotal()
-    } else if (d.type === 'newPrivateMessage' && d.message) {
-      const myId = userStore.userInfo?.id
-      if (d.message.receiverId === myId) {
-        ElNotification({
-          title: '私聊消息',
-          message: (d.message.content || '').slice(0, 80) || '您有一条新私聊'
-        })
-      }
+    }
+    if (d.type === 'newPm') {
+      ElNotification({
+        title: '新私信',
+        message: '您收到一条与该帖子相关的私信'
+      })
       fetchUnreadTotal()
     }
   }
@@ -231,6 +298,23 @@ const handleCommand = async (command) => {
   color: #409eff;
 }
 
+.ai-assistant-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: #606266;
+}
+
+.ai-assistant-container:hover {
+  background-color: #f5f7fa;
+  color: #67c23a;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -258,5 +342,47 @@ const handleCommand = async (command) => {
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px 20px;
+}
+
+.ai-dialog :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.ai-chat-history {
+  height: 400px;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.chat-bubble.ai {
+  align-self: flex-start;
+  background-color: #fff;
+  color: #333;
+  border-bottom-left-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background-color: #409eff;
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+
+.ai-input-wrapper {
+  padding: 10px 0;
 }
 </style>

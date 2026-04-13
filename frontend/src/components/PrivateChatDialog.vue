@@ -4,7 +4,6 @@
     :title="`与 ${peerName || '对方'} 私聊`"
     width="520px"
     destroy-on-close
-    class="private-chat-dialog"
     @closed="handleClosed"
   >
     <div ref="listRef" class="msg-list">
@@ -21,7 +20,7 @@
           <div class="msg-text">{{ m.content }}</div>
         </div>
       </div>
-      <el-empty v-if="!loading && messages.length === 0" description="暂无消息，发送第一条吧" :image-size="64" />
+      <el-empty v-if="!loading && messages.length === 0" description="暂无消息" :image-size="64" />
     </div>
     <div class="msg-input-row">
       <el-input
@@ -30,24 +29,23 @@
         :rows="2"
         maxlength="2000"
         show-word-limit
-        placeholder="输入消息，Enter 发送"
-        @keydown.enter.exact.prevent="send"
+        placeholder="输入内容后点发送"
       />
-      <el-button type="primary" class="send-btn" @click="send">发送</el-button>
+      <el-button type="primary" class="send-btn" :loading="sendLoading" @click="send">发送</el-button>
     </div>
   </el-dialog>
 </template>
 
 <script setup>
 import { ref, watch, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
 import { privateMessageApi } from '@/api/privateMessage'
 import { useUserStore } from '@/stores/user'
-import { sendChatPayload } from '@/utils/chatSocket'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  sessionId: { type: String, default: '' },
+  postId: { type: Number, default: null },
+  postType: { type: String, default: '' },
+  peerId: { type: Number, default: null },
   peerName: { type: String, default: '' }
 })
 
@@ -64,30 +62,8 @@ const visible = computed({
 const messages = ref([])
 const draft = ref('')
 const loading = ref(false)
+const sendLoading = ref(false)
 const listRef = ref(null)
-
-function onWsChat(ev) {
-  const data = ev.detail
-  if (!data || !props.modelValue || !props.sessionId) return
-  if (data.type === 'newPrivateMessage' && data.message) {
-    const msg = data.message
-    if (msg.sessionId === props.sessionId) {
-      const exists = messages.value.some((x) => x.id === msg.id)
-      if (!exists) {
-        messages.value.push(msg)
-        scrollBottom()
-      }
-      if (msg.receiverId === myUserId.value) {
-        privateMessageApi.markRead(props.sessionId).then(() => {
-          window.dispatchEvent(new CustomEvent('refresh-unread'))
-        })
-      }
-    }
-  }
-  if (data.type === 'error' && data.message) {
-    ElMessage.warning(data.message)
-  }
-}
 
 function scrollBottom() {
   nextTick(() => {
@@ -103,11 +79,15 @@ function formatTime(t) {
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-function loadHistory() {
-  if (!props.sessionId) return
+function loadList() {
+  if (!props.postId || !props.postType || !props.peerId) return
   loading.value = true
   privateMessageApi
-    .getHistory(props.sessionId)
+    .list({
+      postId: props.postId,
+      postType: props.postType,
+      peerId: props.peerId
+    })
     .then((res) => {
       messages.value = res.data || []
       scrollBottom()
@@ -117,53 +97,68 @@ function loadHistory() {
     })
 }
 
-function markRead() {
-  if (!props.sessionId) return
-  privateMessageApi.markRead(props.sessionId).then(() => {
-    window.dispatchEvent(new CustomEvent('refresh-unread'))
-  })
+function doMarkRead() {
+  if (!props.postId || !props.postType || !props.peerId) return
+  privateMessageApi
+    .markRead({
+      postId: props.postId,
+      postType: props.postType,
+      peerId: props.peerId
+    })
+    .then(() => {
+      window.dispatchEvent(new CustomEvent('refresh-unread'))
+    })
 }
 
-function bindWsListener() {
-  window.addEventListener('ws-chat', onWsChat)
-}
-
-function unbindWsListener() {
-  window.removeEventListener('ws-chat', onWsChat)
-}
-
-function send() {
-  const text = draft.value.trim()
-  if (!text || !props.sessionId) return
-  if (!sendChatPayload({ type: 'send', sessionId: props.sessionId, content: text })) {
-    ElMessage.warning('实时连接未就绪，请稍候再试或刷新页面')
-    return
-  }
-  draft.value = ''
+function onWsChat(ev) {
+  const d = ev.detail
+  if (!d || d.type !== 'newPm') return
+  if (!props.modelValue) return
+  if (d.postId !== props.postId || d.postType !== props.postType) return
+  loadList()
+  doMarkRead()
 }
 
 function handleClosed() {
-  unbindWsListener()
+  window.removeEventListener('ws-chat', onWsChat)
   messages.value = []
   draft.value = ''
 }
 
+function send() {
+  const text = draft.value.trim()
+  if (!text || !props.postId || !props.postType || !props.peerId) return
+  sendLoading.value = true
+  privateMessageApi
+    .send({
+      postId: props.postId,
+      postType: props.postType,
+      receiverId: props.peerId,
+      content: text
+    })
+    .then(() => {
+      draft.value = ''
+      loadList()
+    })
+    .finally(() => {
+      sendLoading.value = false
+    })
+}
+
 watch(
-  () => [props.modelValue, props.sessionId],
-  ([open, sid]) => {
-    if (!open) {
-      unbindWsListener()
+  () => [props.modelValue, props.postId, props.postType, props.peerId],
+  () => {
+    if (!props.modelValue) {
+      window.removeEventListener('ws-chat', onWsChat)
       return
     }
-    if (!sid) return
-    unbindWsListener()
-    loadHistory()
-    markRead()
-    bindWsListener()
+    if (!props.postId || !props.postType || !props.peerId) return
+    window.removeEventListener('ws-chat', onWsChat)
+    window.addEventListener('ws-chat', onWsChat)
+    loadList()
+    doMarkRead()
   }
 )
-
-defineExpose({ loadHistory })
 </script>
 
 <style scoped>

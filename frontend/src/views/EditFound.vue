@@ -30,12 +30,36 @@
           />
         </el-form-item>
         <el-form-item label="物品描述" prop="description">
-          <el-input
-            v-model="publishForm.description"
-            type="textarea"
-            :rows="4"
-            placeholder="请详细描述物品特征"
-          />
+          <el-row :gutter="20" style="width: 100%;">
+            <el-col :span="aiSuggestionText ? 12 : 24">
+              <el-input
+                v-model="publishForm.description"
+                type="textarea"
+                :rows="6"
+                placeholder="请详细描述物品特征"
+              />
+              <el-button 
+                type="success" 
+                size="small" 
+                link 
+                @click="polishDescription" 
+                :loading="polishing"
+                style="margin-top: 5px;"
+              >
+                <el-icon><MagicStick /></el-icon>
+                {{ hasPolished ? '重新描述' : 'AI 润色描述' }}
+              </el-button>
+            </el-col>
+            <el-col v-if="aiSuggestionText" :span="12">
+              <div class="ai-suggestion-box">
+                <div class="suggestion-header">
+                  <span>AI 建议描述</span>
+                  <el-button type="primary" size="small" @click="applySuggestion">采用建议</el-button>
+                </div>
+                <div class="suggestion-content">{{ aiSuggestionText }}</div>
+              </div>
+            </el-col>
+          </el-row>
         </el-form-item>
         <el-form-item label="联系方式" prop="contactInfo">
           <el-input v-model="publishForm.contactInfo" placeholder="请输入联系方式" />
@@ -54,12 +78,95 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { foundApi } from '@/api/found'
+import { MagicStick } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const publishFormRef = ref(null)
 const loading = ref(false)
+const polishing = ref(false)
 const foundId = ref(null)
+const aiSuggestionText = ref('')
+const hasPolished = ref(false)
+
+const applySuggestion = () => {
+  publishForm.description = aiSuggestionText.value
+  aiSuggestionText.value = ''
+  ElMessage.success('已采用 AI 建议描述')
+}
+
+const polishDescription = async () => {
+  if (!publishForm.description.trim()) {
+    ElMessage.warning('请先输入一些描述内容')
+    return
+  }
+  
+  polishing.value = true
+  aiSuggestionText.value = ''
+  
+  try {
+    const response = await fetch('/api/ai/polish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token') || ''
+      },
+      body: JSON.stringify({
+        description: publishForm.description
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorMessage = 'AI 润色请求失败'
+      try {
+        const errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+
+    // 检查响应类型，如果是 JSON 报错（即使状态码是 200）
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await response.json()
+      if (errorData.code !== 200) {
+        throw new Error(errorData.message || 'AI 润色失败')
+      }
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const content = line.replace('data:', '').trim()
+          if (content) {
+            aiSuggestionText.value += content
+          }
+        } else if (line.trim() && !line.startsWith(':')) {
+          aiSuggestionText.value += line
+        }
+      }
+    }
+    
+    ElMessage.success('润色建议已生成')
+    hasPolished.value = true
+  } catch (error) {
+    console.error('AI 润色失败:', error)
+    ElMessage.error('润色失败，请重试')
+  } finally {
+    polishing.value = false
+  }
+}
 
 const publishForm = reactive({
   itemName: '',
@@ -137,6 +244,35 @@ onMounted(() => {
 .publish-container {
   max-width: 800px;
   margin: 0 auto;
+}
+
+.ai-suggestion-box {
+  background-color: #f0f9eb;
+  border: 1px solid #e1f3d8;
+  border-radius: 8px;
+  padding: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #67c23a;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.suggestion-content {
+  flex: 1;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .publish-card {
