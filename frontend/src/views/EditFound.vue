@@ -47,7 +47,7 @@
                 style="margin-top: 5px;"
               >
                 <el-icon><MagicStick /></el-icon>
-                {{ hasPolished ? '重新描述' : 'AI 润色描述' }}
+                {{ hasPolished ? '重新描述' : (publishForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
               </el-button>
             </el-col>
             <el-col v-if="aiSuggestionText" :span="12">
@@ -61,6 +61,21 @@
             </el-col>
           </el-row>
         </el-form-item>
+        <el-form-item label="上传图片">
+          <el-upload
+            action="#"
+            list-type="picture-card"
+            :auto-upload="false"
+            :limit="1"
+            :show-file-list="true"
+            :file-list="fileList"
+            :on-change="handleImageChange"
+            :on-preview="handlePictureCardPreview"
+            :on-remove="handleRemove"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+        </el-form-item>
         <el-form-item label="联系方式" prop="contactInfo">
           <el-input v-model="publishForm.contactInfo" placeholder="请输入联系方式" />
         </el-form-item>
@@ -70,6 +85,13 @@
         </el-form-item>
       </el-form>
     </el-card>
+
+    <!-- 图片预览 -->
+    <el-image-viewer
+      v-if="previewVisible"
+      :url-list="[previewImage]"
+      @close="previewVisible = false"
+    />
   </div>
 </template>
 
@@ -78,7 +100,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { foundApi } from '@/api/found'
-import { MagicStick } from '@element-plus/icons-vue'
+import { fileApi } from '@/api/file'
+import { Plus, MagicStick } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -88,6 +111,10 @@ const polishing = ref(false)
 const foundId = ref(null)
 const aiSuggestionText = ref('')
 const hasPolished = ref(false)
+const uploadLoading = ref(false)
+const fileList = ref([])
+const previewVisible = ref(false)
+const previewImage = ref('')
 
 const applySuggestion = () => {
   publishForm.description = aiSuggestionText.value
@@ -112,7 +139,8 @@ const polishDescription = async () => {
         'Authorization': localStorage.getItem('token') || ''
       },
       body: JSON.stringify({
-        description: publishForm.description
+        description: publishForm.description,
+        imageUrl: publishForm.imageUrl
       })
     })
 
@@ -168,12 +196,45 @@ const polishDescription = async () => {
   }
 }
 
+const handleImageChange = async (file, uploadFileList) => {
+  if (file.raw) {
+    uploadLoading.value = true
+    try {
+      const res = await fileApi.upload(file.raw)
+      publishForm.imageUrl = res.data
+      fileList.value = uploadFileList.map(f => {
+        if (f.uid === file.uid) {
+          return { ...f, url: res.data }
+        }
+        return f
+      })
+      ElMessage.success('图片上传成功')
+    } catch (error) {
+      console.error(error)
+      ElMessage.error('图片上传失败')
+    } finally {
+      uploadLoading.value = false
+    }
+  }
+}
+
+const handlePictureCardPreview = (file) => {
+  previewImage.value = file.url || publishForm.imageUrl
+  previewVisible.value = true
+}
+
+const handleRemove = (file, uploadFileList) => {
+  publishForm.imageUrl = ''
+  fileList.value = uploadFileList
+}
+
 const publishForm = reactive({
   itemName: '',
   foundPlace: '',
   foundTime: '',
   description: '',
-  contactInfo: ''
+  contactInfo: '',
+  imageUrl: ''
 })
 
 const rules = {

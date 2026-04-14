@@ -7,4 +7,5 @@ import lombok.Data;
 public class AiSuggestionRequest {
     @NotBlank
     private String description;
+    private String imageUrl;
 }

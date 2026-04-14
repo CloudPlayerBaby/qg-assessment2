@@ -6,7 +6,6 @@ import com.yuriyuri.entity.AiSuggestion;
 import com.yuriyuri.mapper.AiMapper;
 import com.yuriyuri.service.AiService;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -34,21 +33,31 @@ public class AiServiceImpl implements AiService {
 
         StringBuilder fullSuggestion = new StringBuilder();
 
+        String userPrompt = req.getDescription();
+        String systemPrompt = "你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
+                "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
+                "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：\"该物品为校园卡，可能用于校园身份认证或消费，请尽快联系失主。\"";
+
+        if (req.getImageUrl() != null && !req.getImageUrl().trim().isEmpty()) {
+            systemPrompt = "你是一个专业的多模态失物招领助手。请结合用户提供的物品图片和描述，分析图片内容，" +
+                    "生成更详细的物品特征描述。请用中文回答，描述要客观、简洁、清晰，并突出关键特征。" +
+                    "例如：用户上传了一张图片并描述\"钥匙\"，你可以分析图片生成：\"该钥匙为古铜色，用一条红色的绳子系着，上边贴着\"808\"，可能是失主的宿舍号\"。" +
+                    "用户上传了一张图片并描述\"校园卡\"，你可以分析图片生成：\"该校园卡上已注明了失主信息，姓名：张*三，学号：尾号为1234\"。" +
+                    "用户上传了一张图片并描述\"耳机\"，你可以分析图片生成：\"该耳机为粉色外观，耳机盒子上有一张紫色的贴纸\"。";
+            userPrompt = "物品描述：" + req.getDescription() + "\n图片URL：" + req.getImageUrl();
+        }
+
         return chatClient.prompt()
-                .system("你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
-                        "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
-                        "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：“该物品为校园卡，可能用于校园身份认证或消费，请尽快联系失主。”")
-                .user(req.getDescription())
+                .system(systemPrompt)
+                .user(userPrompt)
                 .options(DashScopeChatOptions.builder()
-                        .withTemperature(1.8)   // 增加随机性
-                        .withTopP(0.9)          // 增加词汇多样性
+                        .withTemperature(1.8)
+                        .withTopP(0.9)
                         .build())
                 .stream()
                 .content()
-                //每当收到一个文本块，就追加到 StringBuilder 中，逐步构建完整内容
                 .doOnNext(fullSuggestion::append)
                 .doOnComplete(() -> {
-                    //完成后插入到数据库
                     aiSuggestion.setSuggestion(fullSuggestion.toString());
                     aiMapper.updateById(aiSuggestion);
                 });
@@ -77,7 +86,7 @@ public class AiServiceImpl implements AiService {
                         "1. 哪个区域的失物/拾物最多\n" +
                         "2. 哪种物品最近丢失/拾取较多\n" +
                         "3. 给出一些简短的建议\n" +
-                        "请用简洁、友好的语言回答，控制在300字以内。你的回答里不需要追加其他问题和建议，例如：“需要可视化图表或导出Excel，随时告诉我～”\n" +
+                        "请用简洁、友好的语言回答，控制在300字以内。你的回答里不需要追加其他问题和建议，例如：\"需要可视化图表或导出Excel，随时告诉我～\"\n" +
                         "**、# 等md语法也不需要，纯文本+emoji/颜文字即可 ")
                 .user("失物地点统计：" + lostPlaceStats + "\n\n" +
                         "失物物品统计：" + lostItemStats + "\n\n" +

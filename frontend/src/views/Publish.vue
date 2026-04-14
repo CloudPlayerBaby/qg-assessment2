@@ -49,7 +49,7 @@
                     style="margin-top: 5px;"
                   >
                     <el-icon><MagicStick /></el-icon>
-                    {{ hasPolished ? '重新描述' : 'AI 润色描述' }}
+                    {{ hasPolished ? '重新描述' : (lostForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
                   </el-button>
                 </el-col>
                 <el-col v-if="aiSuggestionText" :span="12">
@@ -130,7 +130,7 @@
                     style="margin-top: 5px;"
                   >
                     <el-icon><MagicStick /></el-icon>
-                    {{ hasPolished ? '重新描述' : 'AI 润色描述' }}
+                    {{ hasPolished ? '重新描述' : (foundForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
                   </el-button>
                 </el-col>
                 <el-col v-if="aiSuggestionText" :span="12">
@@ -211,7 +211,8 @@ const polishDescription = async (type) => {
         'Authorization': localStorage.getItem('token') || ''
       },
       body: JSON.stringify({
-        description: form.description
+        description: form.description,
+        imageUrl: form.imageUrl
       })
     })
 

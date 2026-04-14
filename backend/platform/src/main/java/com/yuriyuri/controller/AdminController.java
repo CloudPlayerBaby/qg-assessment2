@@ -181,6 +181,7 @@ public class AdminController {
     @GetMapping("/admin/statistics/ai-analysis")
     @Operation(summary = "获取AI数据分析报告")
     public Result<String> getAiAnalysisReport() {
+        //开始时间是一周前，结束时间是现在
         LocalDateTime startTime = LocalDateTime.now().minusDays(7);
         List<Map<String, Object>> lostPlaceStatistics = adminService.getLostPlaceStatistics(startTime);
         List<Map<String, Object>> lostItemStatistics = adminService.getLostItemStatistics(startTime);

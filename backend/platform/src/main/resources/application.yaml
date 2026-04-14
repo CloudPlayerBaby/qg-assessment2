@@ -5,10 +5,12 @@ spring:
       chat:
         options:
           model: qwen-plus
+
   datasource:
     url: jdbc:mysql://localhost:3306/platform?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 1234
+
   servlet:
     multipart:
       max-file-size: 10MB
@@ -29,6 +31,7 @@ aliyun:
     endpoint: oss-cn-beijing.aliyuncs.com
     bucket: repair-system-demo
 
+# --- 日志配置 ---
 logging:
   file:
     name: ./backend/platform/logs/app.log

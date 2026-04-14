@@ -47,7 +47,7 @@
                 style="margin-top: 5px;"
               >
                 <el-icon><MagicStick /></el-icon>
-                {{ hasPolished ? '重新描述' : 'AI 润色描述' }}
+                {{ hasPolished ? '重新描述' : (publishForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
               </el-button>
             </el-col>
             <el-col v-if="aiSuggestionText" :span="12">
@@ -132,7 +132,8 @@ const polishDescription = async () => {
         'Authorization': localStorage.getItem('token') || ''
       },
       body: JSON.stringify({
-        description: publishForm.description
+        description: publishForm.description,
+        imageUrl: publishForm.imageUrl
       })
     })
 
