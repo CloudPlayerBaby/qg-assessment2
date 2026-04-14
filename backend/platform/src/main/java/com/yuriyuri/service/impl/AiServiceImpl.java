@@ -1,15 +1,21 @@
 package com.yuriyuri.service.impl;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
+import com.yuriyuri.common.BusinessException;
 import com.yuriyuri.dto.ai.AiSuggestionRequest;
 import com.yuriyuri.entity.AiSuggestion;
 import com.yuriyuri.mapper.AiMapper;
 import com.yuriyuri.service.AiService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -20,10 +26,16 @@ public class AiServiceImpl implements AiService {
 
     private final ChatClient chatClient;
 
-    public AiServiceImpl(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
+    public AiServiceImpl(@Qualifier("multiModalChatClient") ChatClient chatClient) {
+        this.chatClient = chatClient;
     }
 
+    /**
+     * ai润色描述（包含图片识别）
+     * @param userId
+     * @param req
+     * @return
+     */
     @Override
     public Flux<String> polishDescription(Long userId, AiSuggestionRequest req) {
         AiSuggestion aiSuggestion = new AiSuggestion();
@@ -31,28 +43,64 @@ public class AiServiceImpl implements AiService {
         aiSuggestion.setDescription(req.getDescription());
         aiMapper.insert(aiSuggestion);
 
+        //拼接生成的建议
         StringBuilder fullSuggestion = new StringBuilder();
 
-        String userPrompt = req.getDescription();
+        String userPrompt;
         String systemPrompt = "你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
                 "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
                 "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：\"该物品为校园卡，可能用于校园身份认证或消费，请尽快联系失主。\"";
 
+        //如果有图片
         if (req.getImageUrl() != null && !req.getImageUrl().trim().isEmpty()) {
             systemPrompt = "你是一个专业的多模态失物招领助手。请结合用户提供的物品图片和描述，分析图片内容，" +
                     "生成更详细的物品特征描述。请用中文回答，描述要客观、简洁、清晰，并突出关键特征。" +
                     "例如：用户上传了一张图片并描述\"钥匙\"，你可以分析图片生成：\"该钥匙为古铜色，用一条红色的绳子系着，上边贴着\"808\"，可能是失主的宿舍号\"。" +
                     "用户上传了一张图片并描述\"校园卡\"，你可以分析图片生成：\"该校园卡上已注明了失主信息，姓名：张*三，学号：尾号为1234\"。" +
                     "用户上传了一张图片并描述\"耳机\"，你可以分析图片生成：\"该耳机为粉色外观，耳机盒子上有一张紫色的贴纸\"。";
-            userPrompt = "物品描述：" + req.getDescription() + "\n图片URL：" + req.getImageUrl();
+            userPrompt = "请结合图片和文字描述润色：\n物品描述：" + req.getDescription();
+
+            URL imageUrl;
+            try {
+                imageUrl = new URL(req.getImageUrl().trim());
+            } catch (MalformedURLException e) { //地址异常
+                throw new BusinessException("图片地址格式不正确");
+            }
+            //生成图片格式（如.jpeg）
+            MimeType mimeType = getImageMimeType(req.getImageUrl().trim());
+
+            // qwen-vl-plus 在当前依赖版本下流式会偶发空指针，这里只能改成非流式调用了
+            String content = chatClient.prompt()
+                    .system(systemPrompt)
+                    .user(u -> u
+                            .text(userPrompt)
+                            //利用.media传入url
+                            .media(mimeType, imageUrl))
+                    .options(DashScopeChatOptions.builder()
+                            //使用多模态识别图片
+                            .withModel("qwen-vl-plus")
+                            .withMultiModel(true)
+                            .build())
+                    .call()
+                    .content();
+            if (content == null) {
+                content = "";
+            }
+            aiSuggestion.setSuggestion(content);
+            aiMapper.updateById(aiSuggestion);
+            //这个版本没办法，识图时只能call了
+            return Flux.just(content);
+        } else {
+            //如果没有图片，则不进行任何处理
+            userPrompt = req.getDescription();
         }
 
+        //无图片的情况
         return chatClient.prompt()
                 .system(systemPrompt)
                 .user(userPrompt)
                 .options(DashScopeChatOptions.builder()
-                        .withTemperature(1.8)
-                        .withTopP(0.9)
+                        .withModel("qwen-plus")
                         .build())
                 .stream()
                 .content()
@@ -71,6 +119,14 @@ public class AiServiceImpl implements AiService {
                 .content();
     }
 
+    /**
+     * ai生成描述
+     * @param lostPlaceStats
+     * @param lostItemStats
+     * @param foundPlaceStats
+     * @param foundItemStats
+     * @return
+     */
     @Override
     public String generateAnalysisReport(List<Map<String, Object>> lostPlaceStats,
                                       List<Map<String, Object>> lostItemStats,
@@ -93,9 +149,25 @@ public class AiServiceImpl implements AiService {
                         "拾物地点统计：" + foundPlaceStats + "\n\n" +
                         "拾物物品统计：" + foundItemStats)
                 .options(DashScopeChatOptions.builder()
-                        .withTemperature(0.7)
                         .build())
                 .call()
                 .content();
+    }
+
+    //以下为方法
+
+    //检测图片格式的方法
+    private MimeType getImageMimeType(String imageUrl) {
+        String lower = imageUrl.toLowerCase();
+        if (lower.endsWith(".png")) {
+            return MimeTypeUtils.parseMimeType("image/png");
+        }
+        if (lower.endsWith(".webp")) {
+            return MimeTypeUtils.parseMimeType("image/webp");
+        }
+        if (lower.endsWith(".gif")) {
+            return MimeTypeUtils.parseMimeType("image/gif");
+        }
+        return MimeTypeUtils.parseMimeType("image/jpeg");
     }
 }

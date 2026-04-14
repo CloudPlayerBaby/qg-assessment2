@@ -5,6 +5,8 @@ spring:
       chat:
         options:
           model: qwen-plus
+          temperature: 1.8
+          top-p: 0.9
 
   datasource:
     url: jdbc:mysql://localhost:3306/platform?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
