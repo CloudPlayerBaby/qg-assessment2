@@ -51,14 +51,31 @@
                     <el-icon><MagicStick /></el-icon>
                     {{ hasPolished ? '重新描述' : (lostForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
                   </el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    link 
+                    @click="searchLostItem" 
+                    :loading="searching"
+                    style="margin-top: 5px; margin-left: 10px;"
+                  >
+                    <el-icon><Search /></el-icon>
+                    AI搜索
+                  </el-button>
                 </el-col>
-                <el-col v-if="aiSuggestionText" :span="12">
-                  <div class="ai-suggestion-box">
+                <el-col v-if="aiSuggestionText || searchResultText" :span="12">
+                  <div v-if="aiSuggestionText" class="ai-suggestion-box">
                     <div class="suggestion-header">
                       <span>AI 建议描述</span>
                       <el-button type="primary" size="small" @click="applySuggestion('lost')">采用建议</el-button>
                     </div>
                     <div class="suggestion-content">{{ aiSuggestionText }}</div>
+                  </div>
+                  <div v-if="searchResultText" class="ai-search-box">
+                    <div class="suggestion-header">
+                      <span>AI 搜索结果</span>
+                    </div>
+                    <div class="suggestion-content">{{ searchResultText }}</div>
                   </div>
                 </el-col>
               </el-row>
@@ -114,7 +131,7 @@
             </el-form-item>
             <el-form-item label="物品描述" prop="description">
               <el-row :gutter="20" style="width: 100%;">
-                <el-col :span="aiSuggestionText ? 12 : 24">
+                <el-col :span="aiSuggestionText || searchResultText ? 12 : 24">
                   <el-input
                     v-model="foundForm.description"
                     type="textarea"
@@ -132,14 +149,31 @@
                     <el-icon><MagicStick /></el-icon>
                     {{ hasPolished ? '重新描述' : (foundForm.imageUrl ? 'AI根据描述分析图片' : 'AI 润色描述') }}
                   </el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    link 
+                    @click="searchFoundItem" 
+                    :loading="searchingFound"
+                    style="margin-top: 5px; margin-left: 10px;"
+                  >
+                    <el-icon><Search /></el-icon>
+                    AI搜索
+                  </el-button>
                 </el-col>
-                <el-col v-if="aiSuggestionText" :span="12">
-                  <div class="ai-suggestion-box">
+                <el-col v-if="aiSuggestionText || searchResultText" :span="12">
+                  <div v-if="aiSuggestionText" class="ai-suggestion-box">
                     <div class="suggestion-header">
                       <span>AI 建议描述</span>
                       <el-button type="primary" size="small" @click="applySuggestion('found')">采用建议</el-button>
                     </div>
                     <div class="suggestion-content">{{ aiSuggestionText }}</div>
+                  </div>
+                  <div v-if="searchResultText" class="ai-search-box">
+                    <div class="suggestion-header">
+                      <span>AI 搜索结果</span>
+                    </div>
+                    <div class="suggestion-content">{{ searchResultText }}</div>
                   </div>
                 </el-col>
               </el-row>
@@ -174,7 +208,7 @@ import { ElMessage } from 'element-plus'
 import { lostApi } from '@/api/lost'
 import { foundApi } from '@/api/found'
 import { fileApi } from '@/api/file'
-import { Plus, MagicStick } from '@element-plus/icons-vue'
+import { Plus, MagicStick, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 const activeTab = ref('lost')
@@ -182,8 +216,11 @@ const lostFormRef = ref(null)
 const foundFormRef = ref(null)
 const loading = ref(false)
 const polishing = ref(false)
+const searching = ref(false)
+const searchingFound = ref(false)
 const uploadLoading = ref(false)
 const aiSuggestionText = ref('')
+const searchResultText = ref('')
 const hasPolished = ref(false)
 
 const applySuggestion = (type) => {
@@ -212,7 +249,8 @@ const polishDescription = async (type) => {
       },
       body: JSON.stringify({
         description: form.description,
-        imageUrl: form.imageUrl
+        imageUrl: form.imageUrl,
+        type: type
       })
     })
 
@@ -267,6 +305,155 @@ const polishDescription = async (type) => {
     polishing.value = false
   }
 }
+
+const searchLostItem = async () => {
+  if (!lostForm.description.trim()) {
+    ElMessage.warning('请先输入一些描述内容')
+    return
+  }
+  
+  searching.value = true
+  searchResultText.value = ''
+  aiSuggestionText.value = ''
+  
+  try {
+    const response = await fetch('/api/ai/search/found', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token') || ''
+      },
+      body: JSON.stringify({
+        description: lostForm.description,
+        type: 'lost'
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorMessage = 'AI 搜索请求失败'
+      try {
+        const errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+
+    // 检查响应类型，如果是 JSON 报错（即使状态码是 200）
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await response.json()
+      if (errorData.code !== 200) {
+        throw new Error(errorData.message || 'AI 搜索失败')
+      }
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const content = line.replace('data:', '').trim()
+          if (content) {
+            searchResultText.value += content
+          }
+        } else if (line.trim() && !line.startsWith(':')) {
+          searchResultText.value += line
+        }
+      }
+    }
+    
+    ElMessage.success('搜索完成')
+  } catch (error) {
+    console.error('AI 搜索失败:', error)
+    ElMessage.error('搜索失败，请重试')
+  } finally {
+    searching.value = false
+  }
+}
+
+const searchFoundItem = async () => {
+  if (!foundForm.description.trim()) {
+    ElMessage.warning('请先输入一些描述内容')
+    return
+  }
+  
+  searchingFound.value = true
+  searchResultText.value = ''
+  aiSuggestionText.value = ''
+  
+  try {
+    const response = await fetch('/api/ai/search/lost', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token') || ''
+      },
+      body: JSON.stringify({
+        description: foundForm.description,
+        type: 'found'
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorMessage = 'AI 搜索请求失败'
+      try {
+        const errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+
+    // 检查响应类型，如果是 JSON 报错（即使状态码是 200）
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await response.json()
+      if (errorData.code !== 200) {
+        throw new Error(errorData.message || 'AI 搜索失败')
+      }
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const content = line.replace('data:', '').trim()
+          if (content) {
+            searchResultText.value += content
+          }
+        } else if (line.trim() && !line.startsWith(':')) {
+          searchResultText.value += line
+        }
+      }
+    }
+    
+    ElMessage.success('搜索完成')
+  } catch (error) {
+    console.error('AI 搜索失败:', error)
+    ElMessage.error('搜索失败，请重试')
+  } finally {
+    searchingFound.value = false
+  }
+}
+
 const previewVisible = ref(false)
 const previewImage = ref('')
 const lostFileList = ref([])
@@ -382,6 +569,9 @@ const handleReset = (type) => {
   if (formRef) {
     formRef.resetFields()
   }
+  aiSuggestionText.value = ''
+  searchResultText.value = ''
+  hasPolished.value = false
   if (type === 'lost') {
     lostForm.imageUrl = ''
     lostForm.applyTop = false
@@ -421,6 +611,16 @@ const handleReset = (type) => {
   flex-direction: column;
 }
 
+.ai-search-box {
+  background-color: #ecf5ff;
+  border: 1px solid #c6e2ff;
+  border-radius: 8px;
+  padding: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .suggestion-header {
   display: flex;
   justify-content: space-between;
@@ -429,6 +629,10 @@ const handleReset = (type) => {
   color: #67c23a;
   font-weight: bold;
   font-size: 14px;
+}
+
+.ai-search-box .suggestion-header {
+  color: #409eff;
 }
 
 .suggestion-content {

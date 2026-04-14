@@ -133,7 +133,8 @@ const polishDescription = async () => {
       },
       body: JSON.stringify({
         description: publishForm.description,
-        imageUrl: publishForm.imageUrl
+        imageUrl: publishForm.imageUrl,
+        type: 'lost'
       })
     })
 

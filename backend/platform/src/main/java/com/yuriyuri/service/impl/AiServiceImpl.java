@@ -4,8 +4,12 @@ import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.yuriyuri.common.BusinessException;
 import com.yuriyuri.dto.ai.AiSuggestionRequest;
 import com.yuriyuri.entity.AiSuggestion;
+import com.yuriyuri.entity.FoundItem;
+import com.yuriyuri.entity.LostItem;
 import com.yuriyuri.mapper.AiMapper;
 import com.yuriyuri.service.AiService;
+import com.yuriyuri.service.tool.FoundItemSearchTool;
+import com.yuriyuri.service.tool.LostItemSearchTool;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,6 +28,12 @@ public class AiServiceImpl implements AiService {
     @Autowired
     private AiMapper aiMapper;
 
+    @Autowired
+    private FoundItemSearchTool foundItemSearchTool;
+
+    @Autowired
+    private LostItemSearchTool lostItemSearchTool;
+
     private final ChatClient chatClient;
 
     public AiServiceImpl(@Qualifier("multiModalChatClient") ChatClient chatClient) {
@@ -32,6 +42,7 @@ public class AiServiceImpl implements AiService {
 
     /**
      * ai润色描述（包含图片识别）
+     *
      * @param userId
      * @param req
      * @return
@@ -47,17 +58,30 @@ public class AiServiceImpl implements AiService {
         StringBuilder fullSuggestion = new StringBuilder();
 
         String userPrompt;
-        String systemPrompt = "你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
-                "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
-                "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：\"该物品为校园卡，可能用于校园身份认证或消费，请尽快联系失主。\"";
+
+        String systemPrompt = "";
+
+        String type = req.getType();
+
+        //如果是失物
+        if ("lost".equals(type)) {
+            systemPrompt = "你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
+                    "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
+                    "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：\"我丢了一张校园卡，上面有我的学号1234，如有捡到请联系我，谢谢。\"";
+        } else if ("found".equals(type)) {
+            systemPrompt = "你是一个专业的失物招领助手。请将用户提供的物品描述润色得更加客观、简洁、清晰，并突出关键特征。" +
+                    "每次润色时，请用不同的表达方式和侧重点来描述同一个物品，让每次的结果都有所不同。" +
+                    "例如：当用户只填写 物品名称：校园卡，你可以自动补充描述：\"该校园卡上已注明了失主信息，姓名：张*三，学号：尾号为1234，如有遗失请联系我\"";
+        }
+
 
         //如果有图片
         if (req.getImageUrl() != null && !req.getImageUrl().trim().isEmpty()) {
             systemPrompt = "你是一个专业的多模态失物招领助手。请结合用户提供的物品图片和描述，分析图片内容，" +
                     "生成更详细的物品特征描述。请用中文回答，描述要客观、简洁、清晰，并突出关键特征。" +
-                    "例如：用户上传了一张图片并描述\"钥匙\"，你可以分析图片生成：\"该钥匙为古铜色，用一条红色的绳子系着，上边贴着\"808\"，可能是失主的宿舍号\"。" +
-                    "用户上传了一张图片并描述\"校园卡\"，你可以分析图片生成：\"该校园卡上已注明了失主信息，姓名：张*三，学号：尾号为1234\"。" +
-                    "用户上传了一张图片并描述\"耳机\"，你可以分析图片生成：\"该耳机为粉色外观，耳机盒子上有一张紫色的贴纸\"。";
+                    "例如：用户上传了一张图片并描述\"钥匙\"，你可以分析图片生成：\"我丢的钥匙为古铜色，用一条红色的绳子系着，上边贴着\"808\"，是我的的宿舍号，如有捡到请联系我，谢谢\"。" +
+                    "用户上传了一张图片并描述\"校园卡\"，你可以分析图片生成：\"校园卡上有我的信息，姓名：张*三，学号：尾号为1234，如有捡到请联系我，谢谢\"。" +
+                    "用户上传了一张图片并描述\"耳机\"，你可以分析图片生成：\"耳机为粉色外观，耳机盒子上有一张紫色的贴纸，如有捡到请联系我，谢谢\"。";
             userPrompt = "请结合图片和文字描述润色：\n物品描述：" + req.getDescription();
 
             URL imageUrl;
@@ -83,6 +107,7 @@ public class AiServiceImpl implements AiService {
                             .build())
                     .call()
                     .content();
+            //防空指针
             if (content == null) {
                 content = "";
             }
@@ -104,6 +129,7 @@ public class AiServiceImpl implements AiService {
                         .build())
                 .stream()
                 .content()
+                //在stream流式输出下需要拼接
                 .doOnNext(fullSuggestion::append)
                 .doOnComplete(() -> {
                     aiSuggestion.setSuggestion(fullSuggestion.toString());
@@ -121,6 +147,7 @@ public class AiServiceImpl implements AiService {
 
     /**
      * ai生成描述
+     *
      * @param lostPlaceStats
      * @param lostItemStats
      * @param foundPlaceStats
@@ -129,9 +156,9 @@ public class AiServiceImpl implements AiService {
      */
     @Override
     public String generateAnalysisReport(List<Map<String, Object>> lostPlaceStats,
-                                      List<Map<String, Object>> lostItemStats,
-                                      List<Map<String, Object>> foundPlaceStats,
-                                      List<Map<String, Object>> foundItemStats) {
+                                         List<Map<String, Object>> lostItemStats,
+                                         List<Map<String, Object>> foundPlaceStats,
+                                         List<Map<String, Object>> foundItemStats) {
         return chatClient.prompt()
                 .system("你是一个专业的失物招领数据分析专家。你会收到4个数据列表：\n" +
                         "1. lostPlaceStats: 失物地点统计，每个元素包含location（地点）和count（数量）\n" +
@@ -151,6 +178,64 @@ public class AiServiceImpl implements AiService {
                 .options(DashScopeChatOptions.builder()
                         .build())
                 .call()
+                .content();
+    }
+
+    /**
+     * 失物请求的ai查询（查拾物）
+     * @param description
+     * @return
+     */
+    @Override
+    public Flux<String> FoundItemSearch(String description) {
+        List<FoundItem> foundItems = foundItemSearchTool.getAllFoundItem();
+
+        String systemPrompt = "你是一个专业的失物招领匹配助手。用户丢失了物品，提供了丢失物品的描述。" +
+                "你需要根据用户的描述，从数据库中的拾物记录里，找出最可能匹配的记录。" +
+                "请按照相关性从大到小排序返回结果，只返回相关度较高的记录（最多5条）。" +
+                "每条结果请包含：物品名称、拾取地点、拾取时间、描述、联系方式。" +
+                "如果没有找到匹配的记录，请返回\"未找到匹配的拾物记录\"。" +
+                "请用简洁、友好的语言回答。" +
+                "返回结果保持排版清晰。" +
+                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。"+
+                "不需要给用户看分析过程，只需要最终的结果。";
+
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user("用户丢失物品描述：" + description + "\n\n数据库中的拾物记录：" + foundItems)
+                .options(DashScopeChatOptions.builder()
+                        .withModel("qwen-plus")
+                        .build())
+                .stream()
+                .content();
+    }
+
+    /**
+     * 拾物请求的ai查询（查失物）
+     * @param description
+     * @return
+     */
+    @Override
+    public Flux<String> LostItemSearch(String description) {
+        List<LostItem> lostItems = lostItemSearchTool.getAllLostItem();
+
+        String systemPrompt = "你是一个专业的失物招领匹配助手。用户捡到了物品，提供了捡到物品的描述。" +
+                "你需要根据用户的描述，从数据库中的失物记录里，找出最可能匹配的记录。" +
+                "请按照相关性从大到小排序返回结果，只返回相关度较高的记录（最多5条）。" +
+                "每条结果请包含：物品名称、丢失地点、丢失时间、描述。" +
+                "如果没有找到匹配的记录，请返回\"未找到匹配的失物记录\"。" +
+                "请用简洁、友好的语言回答。" +
+                "返回结果保持排版清晰。" +
+                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。"+
+                "不需要给用户看分析过程，只需要最终的结果。";
+
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user("用户捡到物品描述：" + description + "\n\n数据库中的失物记录：" + lostItems)
+                .options(DashScopeChatOptions.builder()
+                        .withModel("qwen-plus")
+                        .build())
+                .stream()
                 .content();
     }
 

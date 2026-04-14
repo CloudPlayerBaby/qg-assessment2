@@ -1,6 +1,7 @@
 package com.yuriyuri.controller;
 
 import com.yuriyuri.common.Result;
+import com.yuriyuri.dto.ai.AiSearchRequest;
 import com.yuriyuri.dto.ai.AiSuggestionRequest;
 import com.yuriyuri.service.AiService;
 import com.yuriyuri.util.ThreadLocalUtil;
@@ -29,6 +30,18 @@ public class AiController {
         Map<String, Object> claims = ThreadLocalUtil.get();
         Long userId = ((Number) claims.get("id")).longValue();
         return aiService.polishDescription(userId,req);
+    }
+
+    @PostMapping("/search/found")
+    @Operation(summary = "AI搜索拾物（发布失物时调用）")
+    public Flux<String> searchFound(@Valid @RequestBody AiSearchRequest req) {
+        return aiService.FoundItemSearch(req.getDescription());
+    }
+
+    @PostMapping("/search/lost")
+    @Operation(summary = "AI搜索失物（发布拾物时调用）")
+    public Flux<String> searchLost(@Valid @RequestBody AiSearchRequest req) {
+        return aiService.LostItemSearch(req.getDescription());
     }
 
     @GetMapping("/chat")
