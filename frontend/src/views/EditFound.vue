@@ -80,7 +80,7 @@
           <el-input v-model="publishForm.contactInfo" placeholder="请输入联系方式" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">保存</el-button>
+          <el-button type="primary" @click="handleSubmit" :loading="loading" :disabled="uploadLoading">保存</el-button>
           <el-button @click="handleCancel">取消</el-button>
         </el-form-item>
       </el-form>

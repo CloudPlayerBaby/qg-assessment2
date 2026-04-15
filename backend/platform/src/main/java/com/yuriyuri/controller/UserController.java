@@ -5,6 +5,7 @@ import com.yuriyuri.dto.user.LoginRequest;
 import com.yuriyuri.dto.user.LoginResponse;
 import com.yuriyuri.dto.user.PasswordUpdateRequest;
 import com.yuriyuri.dto.user.RegisterRequest;
+import com.yuriyuri.dto.user.ResetPasswordRequest;
 import com.yuriyuri.dto.user.UserUpdateRequest;
 import com.yuriyuri.entity.User;
 import com.yuriyuri.service.UserService;
@@ -70,6 +71,13 @@ public class UserController {
         Map<String,Object> map = ThreadLocalUtil.get();
         Long id = ((Number) map.get("id")).longValue();
         userService.updatePassword(id, passwordUpdateRequest);
+        return Result.success();
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "重置密码")
+    public Result<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        userService.resetPassword(resetPasswordRequest);
         return Result.success();
     }
 

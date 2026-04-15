@@ -45,5 +45,23 @@ export const userApi = {
       method: 'patch',
       data
     })
+  },
+
+  // 发送邮箱验证码
+  sendVerificationCode(email) {
+    return request({
+      url: '/email/send',
+      method: 'post',
+      params: { email }
+    })
+  },
+
+  // 重置密码
+  resetPassword(data) {
+    return request({
+      url: '/user/reset-password',
+      method: 'post',
+      data
+    })
   }
 }

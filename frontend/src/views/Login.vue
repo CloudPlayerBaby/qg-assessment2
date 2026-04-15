@@ -32,6 +32,9 @@
         </el-form-item>
       </el-form>
       <div class="login-footer">
+        <router-link to="/forgot-password" class="forgot-link">忘记密码？</router-link>
+      </div>
+      <div class="login-footer">
         <span>还没有账号？</span>
         <router-link to="/register">立即注册</router-link>
       </div>
@@ -134,5 +137,14 @@ const handleLogin = async () => {
 
 .login-footer a:hover {
   text-decoration: underline;
+}
+
+.forgot-link {
+  color: #999;
+  font-size: 13px;
+}
+
+.forgot-link:hover {
+  color: #667eea;
 }
 </style>

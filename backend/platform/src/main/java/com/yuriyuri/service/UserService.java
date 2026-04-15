@@ -4,6 +4,7 @@ import com.yuriyuri.dto.user.LoginRequest;
 import com.yuriyuri.dto.user.LoginResponse;
 import com.yuriyuri.dto.user.PasswordUpdateRequest;
 import com.yuriyuri.dto.user.RegisterRequest;
+import com.yuriyuri.dto.user.ResetPasswordRequest;
 import com.yuriyuri.dto.user.UserUpdateRequest;
 import com.yuriyuri.entity.User;
 
@@ -13,4 +14,7 @@ public interface UserService {
     User getUserInfo(Long userId);
     void updateUser(Long userId, UserUpdateRequest req);
     void updatePassword(Long userId, PasswordUpdateRequest req);
+    void resetPassword(ResetPasswordRequest req);
+
+    void sendEmail(String toEmail);
 }

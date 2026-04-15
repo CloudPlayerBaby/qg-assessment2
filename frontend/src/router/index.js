@@ -13,6 +13,11 @@ const routes = [
     component: () => import('@/views/Register.vue')
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/ForgotPassword.vue')
+  },
+  {
     path: '/',
     name: 'Layout',
     component: () => import('@/layout/Index.vue'),
@@ -100,7 +105,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   
-  if (to.path !== '/login' && to.path !== '/register' && !userStore.token) {
+  if (to.path !== '/login' && to.path !== '/register' && to.path !== '/forgot-password' && !userStore.token) {
     next('/login')
   } else if (to.meta.requiresAdmin && !userStore.isAdmin()) {
     next('/home')

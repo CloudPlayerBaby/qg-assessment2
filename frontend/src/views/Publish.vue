@@ -99,7 +99,7 @@
               <el-checkbox v-model="lostForm.applyTop">申请置顶</el-checkbox>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleSubmit('lost')" :loading="loading">发布</el-button>
+              <el-button type="primary" @click="handleSubmit('lost')" :loading="loading" :disabled="uploadLoading">发布</el-button>
               <el-button @click="handleReset('lost')">重置</el-button>
             </el-form-item>
           </el-form>
@@ -185,7 +185,7 @@
               <el-checkbox v-model="foundForm.applyTop">申请置顶</el-checkbox>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleSubmit('found')" :loading="loading">发布</el-button>
+              <el-button type="primary" @click="handleSubmit('found')" :loading="loading" :disabled="uploadLoading">发布</el-button>
               <el-button @click="handleReset('found')">重置</el-button>
             </el-form-item>
           </el-form>

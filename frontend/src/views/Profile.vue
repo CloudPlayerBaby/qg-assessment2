@@ -45,7 +45,7 @@
                   </el-upload>
                 </el-form-item>
                 <el-form-item>
-                  <el-button type="primary" @click="handleSave" :loading="loading">保存修改</el-button>
+                  <el-button type="primary" @click="handleSave" :loading="loading" :disabled="uploadLoading">保存修改</el-button>
                 </el-form-item>
               </el-form>
             </el-tab-pane>
