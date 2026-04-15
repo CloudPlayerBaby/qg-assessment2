@@ -12,6 +12,8 @@ import com.yuriyuri.mapper.FoundMapper;
 import com.yuriyuri.mapper.ReportMapper;
 import com.yuriyuri.service.FoundService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,12 +51,14 @@ public class FoundServiceImpl implements FoundService {
     }
 
     @Override
+    @Cacheable(value = "foundItem", key = "#id")
     public FoundItem getFoundInfoOne(Long id) {
         return checkInfoExist(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "foundItem", key = "#id")
     public void updateFoundInfo(Long id, Long userId, FoundInfoRequest req) {
         FoundItem foundItem = checkInfoExist(id);
 
@@ -79,6 +83,7 @@ public class FoundServiceImpl implements FoundService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "foundItem", key = "#id")
     public void deleteFoundInfo(Long id, Long userId) {
         FoundItem foundItem = checkInfoExist(id);
 
@@ -106,17 +111,6 @@ public class FoundServiceImpl implements FoundService {
         }
 
         return foundItemPage;
-    }
-
-    public FoundItem checkInfoExist(Long id) {
-        LambdaQueryWrapper<FoundItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(FoundItem::getId, id);
-        FoundItem foundItem = foundMapper.selectOne(queryWrapper);
-
-        if (foundItem == null) {
-            throw new BusinessException("拾物信息不存在");
-        }
-        return foundItem;
     }
 
     @Override
@@ -155,14 +149,26 @@ public class FoundServiceImpl implements FoundService {
     @Transactional(rollbackFor =  Exception.class)
     public void confirmItem(Long id, Long userId) {
         FoundItem foundItem = checkInfoExist(id);
-        
+
         if (!foundItem.getUserId().equals(userId)) {
             throw new BusinessException("无权操作他人的拾物信息");
         }
-        
+
         LambdaUpdateWrapper<FoundItem> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(FoundItem::getId, id)
                 .set(FoundItem::getStatus, 2);
         foundMapper.update(updateWrapper);
+    }
+
+    @Cacheable(value = "lostItem", key = "#id")
+    public FoundItem checkInfoExist(Long id) {
+        LambdaQueryWrapper<FoundItem> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FoundItem::getId, id);
+        FoundItem foundItem = foundMapper.selectOne(queryWrapper);
+
+        if (foundItem == null) {
+            throw new BusinessException("拾物信息不存在");
+        }
+        return foundItem;
     }
 }

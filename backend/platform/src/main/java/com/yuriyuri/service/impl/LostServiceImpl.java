@@ -12,6 +12,8 @@ import com.yuriyuri.mapper.LostMapper;
 import com.yuriyuri.mapper.ReportMapper;
 import com.yuriyuri.service.LostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +72,7 @@ public class LostServiceImpl implements LostService {
      * @return
      */
     @Override
+    @Cacheable(value = "lostItem", key = "#id") //加缓存
     public LostItem getLostInfoOne(Long id) {
         return checkInfoExist(id);
     }
@@ -82,6 +85,7 @@ public class LostServiceImpl implements LostService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "lostItem", key = "#id") //删缓存
     public void updateLostInfo(Long id, Long userId, LostInfoRequest req) {
         LostItem lostItem = checkInfoExist(id);
         
@@ -113,6 +117,7 @@ public class LostServiceImpl implements LostService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "lostItem", key = "#id")
     public void deleteLostInfo(Long id, Long userId) {
         LostItem lostItem = checkInfoExist(id);
         
@@ -199,10 +204,31 @@ public class LostServiceImpl implements LostService {
     }
 
     /**
+     * 物品确认认领的方法
+     * @param id
+     * @param userId
+     */
+    @Override
+    @Transactional(rollbackFor =  Exception.class)
+    public void confirmItem(Long id, Long userId) {
+        LostItem lostItem = checkInfoExist(id);
+
+        if (!lostItem.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作他人的失物信息");
+        }
+
+        LambdaUpdateWrapper<LostItem> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(LostItem::getId, id)
+                .set(LostItem::getStatus, 2);
+        lostMapper.update(updateWrapper);
+    }
+
+    /**
      * 失物信息是否存在的统一校验
      * @param id
      * @return
      */
+    @Cacheable(value = "lostItem", key = "#id")
     public LostItem checkInfoExist(Long id){
         //简单校验一下失物信息是否存在
         LambdaQueryWrapper<LostItem> queryWrapper = new LambdaQueryWrapper<>();
@@ -213,21 +239,6 @@ public class LostServiceImpl implements LostService {
             throw new BusinessException("失物信息不存在");
         }
         return lostItem;
-    }
-
-    @Override
-    @Transactional(rollbackFor =  Exception.class)
-    public void confirmItem(Long id, Long userId) {
-        LostItem lostItem = checkInfoExist(id);
-        
-        if (!lostItem.getUserId().equals(userId)) {
-            throw new BusinessException("无权操作他人的失物信息");
-        }
-        
-        LambdaUpdateWrapper<LostItem> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(LostItem::getId, id)
-                .set(LostItem::getStatus, 2);
-        lostMapper.update(updateWrapper);
     }
 
 }
