@@ -13,6 +13,7 @@ public interface AiService {
                               List<Map<String, Object>> lostItemStats,
                               List<Map<String, Object>> foundPlaceStats,
                               List<Map<String, Object>> foundItemStats);
-    Flux<String> FoundItemSearch(String description);
-    Flux<String> LostItemSearch(String description);
+    Flux<String> FoundItemSearch(Long userId, String description);
+    Flux<String> LostItemSearch(Long userId, String description);
+    Boolean limitAiUse(Long userId);
 }

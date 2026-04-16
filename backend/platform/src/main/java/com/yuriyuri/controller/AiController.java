@@ -35,13 +35,26 @@ public class AiController {
     @PostMapping("/search/found")
     @Operation(summary = "AI搜索拾物（发布失物时调用）")
     public Flux<String> searchFound(@Valid @RequestBody AiSearchRequest req) {
-        return aiService.FoundItemSearch(req.getDescription());
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Long userId = ((Number) claims.get("id")).longValue();
+        return aiService.FoundItemSearch(userId, req.getDescription());
     }
 
     @PostMapping("/search/lost")
     @Operation(summary = "AI搜索失物（发布拾物时调用）")
     public Flux<String> searchLost(@Valid @RequestBody AiSearchRequest req) {
-        return aiService.LostItemSearch(req.getDescription());
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Long userId = ((Number) claims.get("id")).longValue();
+        return aiService.LostItemSearch(userId, req.getDescription());
+    }
+
+    @GetMapping("/limit")
+    @Operation(summary = "限制用户一天只能用20次ai")
+    public Result<Boolean> limitAiUse(){
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Long userId = ((Number) claims.get("id")).longValue();
+        Boolean result = aiService.limitAiUse(userId);
+        return Result.success(result);
     }
 
     @GetMapping("/chat")

@@ -20,7 +20,6 @@ public class WebConfig implements WebMvcConfigurer {
                 "/user/register",
                 "/user/reset-password",     // 重置密码接口
                 "/email/send",             // 发送验证码接口
-                "/test-mail",              // 邮件测试接口
                 "/swagger-ui/**",          // Swagger UI 资源
                 "/v3/api-docs/**",         // OpenAPI 文档 JSON
                 "/swagger-ui.html"         // Swagger UI 入口

@@ -22,7 +22,7 @@
               <el-icon :size="20"><ChatDotRound /></el-icon>
             </el-badge>
           </div>
-          <div v-if="isLoggedIn" class="ai-assistant-container" @click="showAiDialog = true">
+          <div v-if="isLoggedIn" class="ai-assistant-container" @click="openAiDialog">
             <el-icon :size="20"><MagicStick /></el-icon>
           </div>
           <el-dropdown @command="handleCommand">
@@ -97,6 +97,7 @@ import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound, MagicStick } f
 import { useUserStore } from '@/stores/user'
 import { commentApi } from '@/api/comment'
 import { privateMessageApi } from '@/api/privateMessage'
+import { aiApi } from '@/api/ai'
 import request from '@/utils/request'
 
 const router = useRouter()
@@ -119,9 +120,33 @@ const aiChatHistory = ref([
   { role: 'ai', content: '你好！我是你的失物招领小助手，有什么可以帮你的吗？' }
 ])
 const chatHistoryRef = ref(null)
+const aiLimitReached = ref(false)
+
+// 打开AI对话框时检查限制
+const openAiDialog = async () => {
+  showAiDialog.value = true
+  try {
+    const res = await aiApi.checkLimit()
+    aiLimitReached.value = !res.data
+    if (aiLimitReached.value) {
+      aiChatHistory.value.push({ 
+        role: 'ai', 
+        content: '抱歉，您今天的AI使用次数已达上限（20次），请明天再试~' 
+      })
+    }
+  } catch (error) {
+    console.error('检查AI限制失败:', error)
+  }
+}
 
 const handleAiChat = async () => {
   if (!aiInput.value.trim() || aiLoading.value) return
+  
+  // 检查AI使用限制
+  if (aiLimitReached.value) {
+    ElMessage.warning('您今天的AI使用次数已达上限（20次），请明天再试')
+    return
+  }
   
   const userMsg = aiInput.value.trim()
   aiChatHistory.value.push({ role: 'user', content: userMsg })

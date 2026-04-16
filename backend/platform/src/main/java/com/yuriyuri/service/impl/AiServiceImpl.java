@@ -1,6 +1,7 @@
 package com.yuriyuri.service.impl;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yuriyuri.common.BusinessException;
 import com.yuriyuri.dto.ai.AiSuggestionRequest;
 import com.yuriyuri.entity.AiSuggestion;
@@ -18,8 +19,11 @@ import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -183,11 +187,19 @@ public class AiServiceImpl implements AiService {
 
     /**
      * 失物请求的ai查询（查拾物）
+     *
+     * @param userId
      * @param description
      * @return
      */
     @Override
-    public Flux<String> FoundItemSearch(String description) {
+    public Flux<String> FoundItemSearch(Long userId, String description) {
+        // 插入AI使用记录
+        AiSuggestion aiSuggestion = new AiSuggestion();
+        aiSuggestion.setUserId(userId);
+        aiSuggestion.setDescription(description);
+        aiMapper.insert(aiSuggestion);
+
         List<FoundItem> foundItems = foundItemSearchTool.getAllFoundItem();
 
         String systemPrompt = "你是一个专业的失物招领匹配助手。用户丢失了物品，提供了丢失物品的描述。" +
@@ -197,8 +209,10 @@ public class AiServiceImpl implements AiService {
                 "如果没有找到匹配的记录，请返回\"未找到匹配的拾物记录\"。" +
                 "请用简洁、友好的语言回答。" +
                 "返回结果保持排版清晰。" +
-                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。"+
+                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。" +
                 "不需要给用户看分析过程，只需要最终的结果。";
+
+        StringBuilder fullSuggestion = new StringBuilder();
 
         return chatClient.prompt()
                 .system(systemPrompt)
@@ -207,16 +221,29 @@ public class AiServiceImpl implements AiService {
                         .withModel("qwen-plus")
                         .build())
                 .stream()
-                .content();
+                .content()
+                .doOnNext(fullSuggestion::append)
+                .doOnComplete(() -> {
+                    aiSuggestion.setSuggestion(fullSuggestion.toString());
+                    aiMapper.updateById(aiSuggestion);
+                });
     }
 
     /**
      * 拾物请求的ai查询（查失物）
+     *
+     * @param userId
      * @param description
      * @return
      */
     @Override
-    public Flux<String> LostItemSearch(String description) {
+    public Flux<String> LostItemSearch(Long userId, String description) {
+        // 插入AI使用记录
+        AiSuggestion aiSuggestion = new AiSuggestion();
+        aiSuggestion.setUserId(userId);
+        aiSuggestion.setDescription(description);
+        aiMapper.insert(aiSuggestion);
+
         List<LostItem> lostItems = lostItemSearchTool.getAllLostItem();
 
         String systemPrompt = "你是一个专业的失物招领匹配助手。用户捡到了物品，提供了捡到物品的描述。" +
@@ -226,8 +253,10 @@ public class AiServiceImpl implements AiService {
                 "如果没有找到匹配的记录，请返回\"未找到匹配的失物记录\"。" +
                 "请用简洁、友好的语言回答。" +
                 "返回结果保持排版清晰。" +
-                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。"+
+                "**、# 等md语法也不需要，纯文本+emoji/颜文字即可。" +
                 "不需要给用户看分析过程，只需要最终的结果。";
+
+        StringBuilder fullSuggestion = new StringBuilder();
 
         return chatClient.prompt()
                 .system(systemPrompt)
@@ -236,13 +265,35 @@ public class AiServiceImpl implements AiService {
                         .withModel("qwen-plus")
                         .build())
                 .stream()
-                .content();
+                .content()
+                .doOnNext(fullSuggestion::append)
+                .doOnComplete(() -> {
+                    aiSuggestion.setSuggestion(fullSuggestion.toString());
+                    aiMapper.updateById(aiSuggestion);
+                });
+    }
+
+    /**
+     * 限制用户一天的用量
+     * @param userId
+     * @return
+     */
+    @Override
+    public Boolean limitAiUse(Long userId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();         // 今日 00:00:00
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);   // 今日 23:59:59.999999999
+
+        LambdaQueryWrapper<AiSuggestion> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AiSuggestion::getUserId, userId)
+                .between(AiSuggestion::getCreateTime, startOfDay, endOfDay);
+        Long count = aiMapper.selectCount(wrapper);
+        return count < 20;
     }
 
     //以下为方法
 
     //检测图片格式的方法
-    private MimeType getImageMimeType(String imageUrl) {
+    public MimeType getImageMimeType(String imageUrl) {
         String lower = imageUrl.toLowerCase();
         if (lower.endsWith(".png")) {
             return MimeTypeUtils.parseMimeType("image/png");

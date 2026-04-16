@@ -208,6 +208,7 @@ import { ElMessage } from 'element-plus'
 import { lostApi } from '@/api/lost'
 import { foundApi } from '@/api/found'
 import { fileApi } from '@/api/file'
+import { aiApi } from '@/api/ai'
 import { Plus, MagicStick, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
@@ -235,6 +236,17 @@ const polishDescription = async (type) => {
   if (!form.description.trim()) {
     ElMessage.warning('请先输入一些描述内容')
     return
+  }
+  
+  // 检查AI使用限制
+  try {
+    const limitRes = await aiApi.checkLimit()
+    if (!limitRes.data) {
+      ElMessage.warning('您今天的AI使用次数已达上限（20次），请明天再试')
+      return
+    }
+  } catch (error) {
+    console.error('检查AI限制失败:', error)
   }
   
   polishing.value = true
@@ -312,6 +324,17 @@ const searchLostItem = async () => {
     return
   }
   
+  // 检查AI使用限制
+  try {
+    const limitRes = await aiApi.checkLimit()
+    if (!limitRes.data) {
+      ElMessage.warning('您今天的AI使用次数已达上限（20次），请明天再试')
+      return
+    }
+  } catch (error) {
+    console.error('检查AI限制失败:', error)
+  }
+  
   searching.value = true
   searchResultText.value = ''
   aiSuggestionText.value = ''
@@ -384,6 +407,17 @@ const searchFoundItem = async () => {
   if (!foundForm.description.trim()) {
     ElMessage.warning('请先输入一些描述内容')
     return
+  }
+  
+  // 检查AI使用限制
+  try {
+    const limitRes = await aiApi.checkLimit()
+    if (!limitRes.data) {
+      ElMessage.warning('您今天的AI使用次数已达上限（20次），请明天再试')
+      return
+    }
+  } catch (error) {
+    console.error('检查AI限制失败:', error)
   }
   
   searchingFound.value = true

@@ -3,7 +3,7 @@ spring:
     host: smtp.163.com
     port: 465
     username: 13543768378@163.com
-    password: WATstEVFdVxGdt8b
+    password: ${MAIL_PASSWORD}
     protocol: smtp
     properties:
       mail:
@@ -19,7 +19,7 @@ spring:
   # ai
   ai:
     dashscope:
-      api-key: sk-c6d8d8b3b24b4715a88c811ec61e2ab7
+      api-key: ${DASHSCOPE_API_KEY}
       chat:
         options:
           model: qwen-plus
@@ -34,9 +34,9 @@ spring:
 
   #数据库
   datasource:
-    url: jdbc:mysql://localhost:3306/platform?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 1234
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   #文件上传
   servlet:
