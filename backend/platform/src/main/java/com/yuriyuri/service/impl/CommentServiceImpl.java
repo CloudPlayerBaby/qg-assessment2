@@ -3,6 +3,7 @@ package com.yuriyuri.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.yuriyuri.common.BusinessException;
+import com.yuriyuri.constant.comment.IsRead;
 import com.yuriyuri.dto.comment.CommentRequest;
 import com.yuriyuri.entity.Comment;
 import com.yuriyuri.entity.FoundItem;
@@ -68,7 +69,7 @@ public class CommentServiceImpl implements CommentService {
         BeanUtils.copyProperties(req, comment);
         comment.setSenderId(userId);
         comment.setReceiverId(receiverId);
-        comment.setStatus(0); // 0 为未读
+        comment.setStatus(IsRead.UNREAD); // 0 为未读
         comment.setCreateTime(LocalDateTime.now());
         comment.setUpdateTime(LocalDateTime.now());
         commentMapper.insert(comment);
@@ -117,7 +118,7 @@ public class CommentServiceImpl implements CommentService {
     public Long getUnreadCount(Long userId) {
         LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Comment::getReceiverId, userId)
-                .eq(Comment::getStatus, 0); // 0 为未读
+                .eq(Comment::getStatus, IsRead.UNREAD); // 0 为未读
         return commentMapper.selectCount(wrapper);
     }
 
@@ -145,7 +146,7 @@ public class CommentServiceImpl implements CommentService {
     public void markAsRead(Long commentId) {
         LambdaUpdateWrapper<Comment> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Comment::getId, commentId)
-                .set(Comment::getStatus, 1); // 1 为已读
+                .set(Comment::getStatus, IsRead.READ); // 1 为已读
         commentMapper.update(null, wrapper);
     }
 }

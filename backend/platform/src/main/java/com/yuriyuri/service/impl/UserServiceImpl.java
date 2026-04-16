@@ -3,7 +3,8 @@ package com.yuriyuri.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.yuriyuri.common.BusinessException;
-import com.yuriyuri.constant.UserIdentity;
+import com.yuriyuri.constant.user.UserIdentity;
+import com.yuriyuri.constant.user.UserStatus;
 import com.yuriyuri.dto.user.LoginRequest;
 import com.yuriyuri.dto.user.LoginResponse;
 import com.yuriyuri.dto.user.PasswordUpdateRequest;
@@ -101,8 +102,8 @@ public class UserServiceImpl implements UserService {
         //昵称默认是用户名
         user.setNickname(req.getUsername());
         //默认是普通用户
-        user.setIdentity(UserIdentity.NORMAL_USER);
-        user.setStatus(1);
+        user.setIdentity(UserIdentity.USER);
+        user.setStatus(UserStatus.NORMAL);
 
         userMapper.insert(user);
     }
@@ -130,14 +131,15 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("账号或密码错误");
         }
 
-        if (user.getStatus() == 0) {
+        if (user.getStatus() == UserStatus.BANNED) {
             throw new BusinessException("账号已被封禁");
         }
 
-        //登陆时生成token，token包含id和username
+        //登陆时生成token，token包含id、username和identity
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
         claims.put("username", user.getUsername());
+        claims.put("identity",user.getIdentity());
         String token = JwtUtil.genToken(claims);
 
         //创建一个对象，它是LoginResponse里的UserInfo对象（lombok多层嵌套）
@@ -152,7 +154,7 @@ public class UserServiceImpl implements UserService {
 
         //登录成功后插入一条登陆数据给user_login_log表
         //管理员不算日活跃用户数，只有普通用户算
-        if(user.getIdentity()==0){
+        if(user.getIdentity()==UserIdentity.USER){
             UserLoginLog userLoginLog = new UserLoginLog();
             userLoginLog.setUserId(user.getId());
             userLoginLog.setLoginTime(LocalDateTime.now());
@@ -222,11 +224,6 @@ public class UserServiceImpl implements UserService {
         // 校验两次密码是否一致
         if (!req.getNewPassword().equals(req.getConfirmPassword())) {
             throw new BusinessException("两次密码输入不一致");
-        }
-
-        // 校验密码长度
-        if (req.getNewPassword().length() < 6 || req.getNewPassword().length() > 20) {
-            throw new BusinessException("密码长度应在6-20位之间");
         }
 
         // 查询用户

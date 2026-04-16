@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuriyuri.common.BusinessException;
+import com.yuriyuri.constant.post.PostSortOrder;
+import com.yuriyuri.constant.post.PostStatus;
+import com.yuriyuri.constant.report.ReportStatus;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.lost.LostInfoRequest;
 import com.yuriyuri.entity.LostItem;
@@ -42,11 +45,11 @@ public class LostServiceImpl implements LostService {
         lostItem.setDescription(req.getDescription());
         lostItem.setImageUrl(req.getImageUrl());
         //关于置顶，这里默认是0，置顶为1，具体思路在Admin那块
-        lostItem.setSortOrder(0);
+        lostItem.setSortOrder(PostSortOrder.NORMAL);
         //选择置顶，这里就是1，否则默认为0
         lostItem.setApplyTop(req.getApplyTop());
         //默认状态为1（正常）
-        lostItem.setStatus(1);
+        lostItem.setStatus(PostStatus.NORMAL);
         lostMapper.insert(lostItem);
     }
 
@@ -147,7 +150,7 @@ public class LostServiceImpl implements LostService {
                 like(req.getItemName() != null, LostItem::getItemName, req.getItemName()).
                 like(req.getLostPlace() != null, LostItem::getLostPlace, req.getLostPlace()).
                 //用户首页仅能查看状态为0和1的帖子，-1被封禁首页不可查看
-                in(LostItem::getStatus, 0,1).
+                in(LostItem::getStatus, PostStatus.REQUESTED,PostStatus.NORMAL).
                 orderByDesc(LostItem::getSortOrder).
                 orderByDesc(LostItem::getUpdateTime);
 
@@ -193,13 +196,13 @@ public class LostServiceImpl implements LostService {
         report.setType(type);
         report.setReason(reason);
         //默认为1，代表默认正常
-        report.setStatus(1);
+        report.setStatus(ReportStatus.REQUESTED);
         reportMapper.insert(report);
 
         //同时把对应帖子的状态变为0（受理中）
         LambdaUpdateWrapper<LostItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(LostItem::getId, targetId)
-                .set(LostItem::getStatus, 0);
+                .set(LostItem::getStatus, PostStatus.REQUESTED);
         lostMapper.update(wrapper);
     }
 
@@ -219,7 +222,7 @@ public class LostServiceImpl implements LostService {
 
         LambdaUpdateWrapper<LostItem> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(LostItem::getId, id)
-                .set(LostItem::getStatus, 2);
+                .set(LostItem::getStatus, PostStatus.FINISHED);
         lostMapper.update(updateWrapper);
     }
 

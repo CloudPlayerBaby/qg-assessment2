@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuriyuri.common.BusinessException;
+import com.yuriyuri.constant.post.PostSortOrder;
+import com.yuriyuri.constant.post.PostStatus;
+import com.yuriyuri.constant.report.ReportStatus;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.found.FoundInfoRequest;
 import com.yuriyuri.entity.FoundItem;
@@ -35,9 +38,9 @@ public class FoundServiceImpl implements FoundService {
         foundItem.setFoundTime(req.getFoundTime());
         foundItem.setDescription(req.getDescription());
         foundItem.setContactInfo(req.getContactInfo());
-        foundItem.setSortOrder(0);
+        foundItem.setSortOrder(PostSortOrder.NORMAL);
         foundItem.setApplyTop(req.getApplyTop());
-        foundItem.setStatus(1);
+        foundItem.setStatus(PostStatus.NORMAL);
         foundMapper.insert(foundItem);
     }
 
@@ -101,7 +104,7 @@ public class FoundServiceImpl implements FoundService {
 
         wrapper.like(req.getItemName() != null, FoundItem::getItemName, req.getItemName())
                 .like(req.getFoundPlace() != null, FoundItem::getFoundPlace, req.getFoundPlace())
-                .in(FoundItem::getStatus, 0, 1)
+                .in(FoundItem::getStatus, PostStatus.REQUESTED, PostStatus.NORMAL)
                 .orderByDesc(FoundItem::getSortOrder)
                 .orderByDesc(FoundItem::getUpdateTime);
 
@@ -136,12 +139,12 @@ public class FoundServiceImpl implements FoundService {
         report.setTargetId(targetId);
         report.setType(type);
         report.setReason(reason);
-        report.setStatus(1);
+        report.setStatus(ReportStatus.REQUESTED);
         reportMapper.insert(report);
 
         LambdaUpdateWrapper<FoundItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(FoundItem::getId, targetId)
-                .set(FoundItem::getStatus, 0);
+                .set(FoundItem::getStatus, PostStatus.REQUESTED);
         foundMapper.update(wrapper);
     }
 
@@ -156,7 +159,7 @@ public class FoundServiceImpl implements FoundService {
 
         LambdaUpdateWrapper<FoundItem> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(FoundItem::getId, id)
-                .set(FoundItem::getStatus, 2);
+                .set(FoundItem::getStatus, PostStatus.FINISHED);
         foundMapper.update(updateWrapper);
     }
 

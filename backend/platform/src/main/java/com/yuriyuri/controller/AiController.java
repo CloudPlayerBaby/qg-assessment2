@@ -1,5 +1,6 @@
 package com.yuriyuri.controller;
 
+import com.yuriyuri.annotation.RequireIdentity;
 import com.yuriyuri.common.Result;
 import com.yuriyuri.dto.ai.AiSearchRequest;
 import com.yuriyuri.dto.ai.AiSuggestionRequest;
@@ -49,6 +50,7 @@ public class AiController {
     }
 
     @GetMapping("/limit")
+    @RequireIdentity({"user"}) //只有用户有限制
     @Operation(summary = "限制用户一天只能用20次ai")
     public Result<Boolean> limitAiUse(){
         Map<String, Object> claims = ThreadLocalUtil.get();

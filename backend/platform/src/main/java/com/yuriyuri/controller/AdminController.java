@@ -1,6 +1,7 @@
 package com.yuriyuri.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yuriyuri.annotation.RequireIdentity;
 import com.yuriyuri.common.Result;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.admin.TopRequest;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
+@RequireIdentity({"admin"})
 @Tag(name = "管理员管理", description = "设置置顶、处理举报等接口")
 public class AdminController {
     @Autowired
@@ -194,3 +196,5 @@ public class AdminController {
     }
 
 }
+
+

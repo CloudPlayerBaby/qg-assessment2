@@ -4,6 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuriyuri.common.BusinessException;
+import com.yuriyuri.constant.post.PostApplyTop;
+import com.yuriyuri.constant.post.PostSortOrder;
+import com.yuriyuri.constant.post.PostStatus;
+import com.yuriyuri.constant.report.ReportStatus;
+import com.yuriyuri.constant.user.UserStatus;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.admin.TopRequest;
 import com.yuriyuri.dto.found.FoundInfoRequest;
@@ -51,7 +56,7 @@ public class AdminServiceImpl implements AdminService {
     public Page<LostItem> getLostInfo(LostInfoRequest req, int pageNum, int pageSize) {
         Page<LostItem> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<LostItem> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(LostItem::getApplyTop, 1)
+        wrapper.eq(LostItem::getApplyTop, PostApplyTop.REQUESTED)
                 .like(req.getItemName() != null, LostItem::getItemName, req.getItemName())
                 .like(req.getLostPlace() != null, LostItem::getLostPlace, req.getLostPlace())
                 .orderByDesc(LostItem::getApplyTop)
@@ -68,7 +73,7 @@ public class AdminServiceImpl implements AdminService {
     public Page<FoundItem> getFoundInfo(FoundInfoRequest req, int pageNum, int pageSize) {
         Page<FoundItem> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<FoundItem> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FoundItem::getApplyTop, 1)
+        wrapper.eq(FoundItem::getApplyTop, PostApplyTop.REQUESTED)
                 .like(req.getItemName() != null, FoundItem::getItemName, req.getItemName())
                 .like(req.getFoundPlace() != null, FoundItem::getFoundPlace, req.getFoundPlace())
                 .orderByDesc(FoundItem::getApplyTop)
@@ -84,7 +89,7 @@ public class AdminServiceImpl implements AdminService {
 
     /**
      * 审核通过后进行的处理，失物和拾物同理
-     * applyTop含义：0-正常（不选择置顶），1-置顶审核中，2-置顶审核通过，-1-置顶审核被驳回
+     * applyTop含义：0-正常（不选择置顶），ItemApplyTop.REQUESTED-置顶审核中，2-置顶审核通过，-1-置顶审核被驳回
      *
      * @param req
      */
@@ -95,8 +100,8 @@ public class AdminServiceImpl implements AdminService {
         //更新sort_order为1，apply_top（接受置顶）为2，top_end_time为(now+hours)
         LambdaUpdateWrapper<LostItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(LostItem::getId, req.getId())
-                .set(LostItem::getSortOrder, 1)
-                .set(LostItem::getApplyTop, 2)
+                .set(LostItem::getSortOrder, PostSortOrder.TOP)
+                .set(LostItem::getApplyTop, PostApplyTop.APPROVED)
                 .set(LostItem::getTopEndTime, topEndTime);
         lostMapper.update(wrapper);
     }
@@ -112,8 +117,8 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime topEndTime = LocalDateTime.now().plusHours(req.getHours());
         LambdaUpdateWrapper<FoundItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(FoundItem::getId, req.getId())
-                .set(FoundItem::getSortOrder, 1)
-                .set(FoundItem::getApplyTop, 2)
+                .set(FoundItem::getSortOrder, PostSortOrder.TOP)
+                .set(FoundItem::getApplyTop, PostApplyTop.APPROVED)
                 .set(FoundItem::getTopEndTime, topEndTime);
         foundMapper.update(wrapper);
     }
@@ -129,7 +134,7 @@ public class AdminServiceImpl implements AdminService {
         LambdaUpdateWrapper<LostItem> wrapper = new LambdaUpdateWrapper<>();
         //置顶请求-1即为被驳回
         wrapper.eq(LostItem::getId, id)
-                .set(LostItem::getApplyTop, -1);
+                .set(LostItem::getApplyTop, PostApplyTop.REJECTED);
         lostMapper.update(wrapper);
     }
 
@@ -138,11 +143,9 @@ public class AdminServiceImpl implements AdminService {
     public void rejectFoundTop(Long id) {
         LambdaUpdateWrapper<FoundItem> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(FoundItem::getId, id)
-                .set(FoundItem::getApplyTop, -1);
+                .set(FoundItem::getApplyTop, PostApplyTop.REJECTED);
         foundMapper.update(wrapper);
     }
-
-    //以下为帖子举报功能
 
     /**
      * 查看所有的帖子举报内容
@@ -183,11 +186,11 @@ public class AdminServiceImpl implements AdminService {
         //把举报请求状态改变，即update report set status=0 where id=?
         LambdaUpdateWrapper<Report> wrapper1 = new LambdaUpdateWrapper<>();
         wrapper1.eq(Report::getId, id)
-                .set(Report::getStatus, 0);
+                .set(Report::getStatus, ReportStatus.APPROVED);
         reportMapper.update(wrapper1);
 
         //把举报的帖子封禁
-        updatePostStatus(report.getTargetId(), report.getType(), -1);
+        updatePostStatus(report.getTargetId(), report.getType(), PostStatus.BANNED);
     }
 
     /**
@@ -208,11 +211,11 @@ public class AdminServiceImpl implements AdminService {
         //把举报请求状态改变，即update report set status=-1 where id=?
         LambdaUpdateWrapper<Report> wrapper1 = new LambdaUpdateWrapper<>();
         wrapper1.eq(Report::getId, id)
-                .set(Report::getStatus, -1);
+                .set(Report::getStatus, ReportStatus.APPROVED);
         reportMapper.update(wrapper1);
 
         //帖子状态变回1
-        updatePostStatus(report.getTargetId(), report.getType(), 1);
+        updatePostStatus(report.getTargetId(), report.getType(), PostStatus.BANNED);
     }
 
     /**
@@ -239,7 +242,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(rollbackFor = Exception.class)
     public void banUser(Long id) {
         //0就是封了
-        updateUserStatus(id,0);
+        updateUserStatus(id, UserStatus.BANNED);
     }
 
     /**
@@ -251,7 +254,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(rollbackFor = Exception.class)
     public void unBanUser(Long id) {
         //1就是解封
-        updateUserStatus(id,1);
+        updateUserStatus(id,UserStatus.NORMAL);
     }
 
     /**
@@ -262,7 +265,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void banPost(Long id, String type) {
-        updatePostStatus(id, type, -1);
+        updatePostStatus(id, type, PostStatus.BANNED);
     }
 
     /**
@@ -273,7 +276,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unBanPost(Long id, String type) {
-        updatePostStatus(id, type, 1);
+        updatePostStatus(id, type, PostStatus.NORMAL);
     }
 
     /**
@@ -319,10 +322,10 @@ public class AdminServiceImpl implements AdminService {
     public Long getCompletedPostNumber() {
         //状态为2的为已完成（已找回）
         LambdaQueryWrapper<LostItem> lostWrapper = new LambdaQueryWrapper<>();
-        lostWrapper.eq(LostItem::getStatus, 2);
+        lostWrapper.eq(LostItem::getStatus, PostStatus.FINISHED);
         Long lostPostNumber = lostMapper.selectCount(lostWrapper);
         LambdaQueryWrapper<FoundItem> foundWrapper = new LambdaQueryWrapper<>();
-        foundWrapper.eq(FoundItem::getStatus,2);
+        foundWrapper.eq(FoundItem::getStatus,PostStatus.FINISHED);
         Long foundPostNumber = foundMapper.selectCount(foundWrapper);
         return lostPostNumber+foundPostNumber;
     }
@@ -345,7 +348,7 @@ public class AdminServiceImpl implements AdminService {
         //从数据库获取七天内的数据，不包括被封禁的
         LambdaQueryWrapper<LostItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(LostItem::getCreateTime, startTime)
-                .ne(LostItem::getStatus, -1);
+                .ne(LostItem::getStatus, PostStatus.FINISHED);
         List<LostItem> items = lostMapper.selectList(wrapper);
 
         //key为lostPlace，value为对应lostPlace的count
@@ -372,7 +375,7 @@ public class AdminServiceImpl implements AdminService {
     public List<Map<String, Object>> getLostItemStatistics(LocalDateTime startTime) {
         LambdaQueryWrapper<LostItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(LostItem::getCreateTime, startTime)
-                .ne(LostItem::getStatus, -1);
+                .ne(LostItem::getStatus, PostStatus.FINISHED);
         List<LostItem> items = lostMapper.selectList(wrapper);
         
         Map<String, Long> countMap = new HashMap<>();
@@ -395,7 +398,7 @@ public class AdminServiceImpl implements AdminService {
     public List<Map<String, Object>> getFoundPlaceStatistics(LocalDateTime startTime) {
         LambdaQueryWrapper<FoundItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(FoundItem::getCreateTime, startTime)
-                .ne(FoundItem::getStatus, -1);
+                .ne(FoundItem::getStatus, PostStatus.FINISHED);
         List<FoundItem> items = foundMapper.selectList(wrapper);
         
         Map<String, Long> countMap = new HashMap<>();
@@ -418,7 +421,7 @@ public class AdminServiceImpl implements AdminService {
     public List<Map<String, Object>> getFoundItemStatistics(LocalDateTime startTime) {
         LambdaQueryWrapper<FoundItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(FoundItem::getCreateTime, startTime)
-                .ne(FoundItem::getStatus, -1);
+                .ne(FoundItem::getStatus, PostStatus.FINISHED);
         List<FoundItem> items = foundMapper.selectList(wrapper);
         
         Map<String, Long> countMap = new HashMap<>();

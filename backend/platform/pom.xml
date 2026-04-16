@@ -32,6 +32,12 @@
         <spring-ai-alibaba.version>1.0.0-M6.1</spring-ai-alibaba.version>
     </properties>
     <dependencies>
+        <!--aop-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- 邮件 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

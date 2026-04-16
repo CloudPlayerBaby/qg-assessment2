@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yuriyuri.common.BusinessException;
+import com.yuriyuri.constant.private_message.IsRead;
 import com.yuriyuri.dto.message.PrivateChatRow;
 import com.yuriyuri.dto.message.PrivateMessageSendRequest;
 import com.yuriyuri.entity.FoundItem;
@@ -81,7 +82,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         privateMessage.setSenderId(senderId);
         privateMessage.setReceiverId(req.getReceiverId());
         privateMessage.setContent(content);
-        privateMessage.setIsRead(0);
+        privateMessage.setIsRead(IsRead.UNREAD);
         privateMessage.setCreateTime(LocalDateTime.now());
         privateMessageMapper.insert(privateMessage);
 
@@ -115,6 +116,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         if (userId.equals(peerId)) {
             throw new BusinessException("参数错误");
         }
+
         Long ownerId = getPostOwnerId(postId, postType);
         if (!userId.equals(ownerId) && !peerId.equals(ownerId)) {
             throw new BusinessException("无权查看");
@@ -123,6 +125,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         //创建sessionId
         String sessionId = buildSessionId(postType, postId, userId, peerId);
         LambdaQueryWrapper<PrivateMessage> wrapper = new LambdaQueryWrapper<>();
+
         //这里是正序获取消息
         wrapper.eq(PrivateMessage::getSessionId, sessionId)
                 .orderByAsc(PrivateMessage::getCreateTime);
@@ -155,8 +158,8 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         LambdaUpdateWrapper<PrivateMessage> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(PrivateMessage::getSessionId, sessionId)
                 .eq(PrivateMessage::getReceiverId, userId)
-                .eq(PrivateMessage::getIsRead, 0)
-                .set(PrivateMessage::getIsRead, 1);
+                .eq(PrivateMessage::getIsRead, IsRead.UNREAD)
+                .set(PrivateMessage::getIsRead, IsRead.READ);
         privateMessageMapper.update(wrapper);
     }
 
@@ -170,7 +173,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     public Long countUnread(Long userId) {
         LambdaQueryWrapper<PrivateMessage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PrivateMessage::getReceiverId, userId)
-                .eq(PrivateMessage::getIsRead, 0);
+                .eq(PrivateMessage::getIsRead, IsRead.UNREAD);
         return privateMessageMapper.selectCount(wrapper);
     }
 
@@ -226,10 +229,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
             row.setLastContent(privateMessage.getContent());
             row.setLastTime(privateMessage.getCreateTime());
 
+            //写一个select count(*) from private_message where session_id=? and receiver_id=? and is_read=0 获取未读数
             LambdaQueryWrapper<PrivateMessage> wrapper2 = new LambdaQueryWrapper<>();
             wrapper2.eq(PrivateMessage::getSessionId, sessionId)
                     .eq(PrivateMessage::getReceiverId, userId)
-                    .eq(PrivateMessage::getIsRead, 0);
+                    .eq(PrivateMessage::getIsRead, IsRead.UNREAD);
             row.setUnreadCount(privateMessageMapper.selectCount(wrapper2));
             rows.add(row);
         }
