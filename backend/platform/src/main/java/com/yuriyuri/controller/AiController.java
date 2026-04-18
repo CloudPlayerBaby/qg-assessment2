@@ -58,9 +58,4 @@ public class AiController {
         Boolean result = aiService.limitAiUse(userId);
         return Result.success(result);
     }
-
-    @GetMapping("/chat")
-    public Result<String> chat(@RequestParam String message) {
-        return Result.success(aiService.chat(message));
-    }
 }

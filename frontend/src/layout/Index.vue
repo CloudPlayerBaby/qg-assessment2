@@ -22,9 +22,7 @@
               <el-icon :size="20"><ChatDotRound /></el-icon>
             </el-badge>
           </div>
-          <div v-if="isLoggedIn" class="ai-assistant-container" @click="openAiDialog">
-            <el-icon :size="20"><MagicStick /></el-icon>
-          </div>
+
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :size="32" :src="userInfo?.avatarUrl">
@@ -56,49 +54,17 @@
       <router-view />
     </el-main>
 
-    <!-- AI 助手对话框 -->
-    <el-dialog
-      v-model="showAiDialog"
-      title="AI 校园小助手"
-      width="500px"
-      :close-on-click-modal="false"
-      class="ai-dialog"
-    >
-      <div class="ai-chat-history" ref="chatHistoryRef">
-        <div v-for="(msg, index) in aiChatHistory" :key="index" :class="['chat-bubble', msg.role]">
-          <div class="bubble-content">{{ msg.content }}</div>
-        </div>
-      </div>
-      <template #footer>
-        <div class="ai-input-wrapper">
-          <el-input
-            v-model="aiInput"
-            placeholder="问问我失物招领相关问题吧..."
-            @keyup.enter="handleAiChat"
-            :disabled="aiLoading"
-          >
-            <template #append>
-              <el-button @click="handleAiChat" :loading="aiLoading">
-                发送
-              </el-button>
-            </template>
-          </el-input>
-        </div>
-      </template>
-    </el-dialog>
   </el-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound, MagicStick } from '@element-plus/icons-vue'
+import { DocumentCopy, User, Setting, SwitchButton, ChatDotRound } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { commentApi } from '@/api/comment'
 import { privateMessageApi } from '@/api/privateMessage'
-import { aiApi } from '@/api/ai'
-import request from '@/utils/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -111,67 +77,6 @@ const activeMenu = computed(() => route.path)
 
 const unreadCount = ref(0)
 let timer = null
-
-// AI 助手相关
-const showAiDialog = ref(false)
-const aiInput = ref('')
-const aiLoading = ref(false)
-const aiChatHistory = ref([
-  { role: 'ai', content: '你好！我是你的失物招领小助手，有什么可以帮你的吗？' }
-])
-const chatHistoryRef = ref(null)
-const aiLimitReached = ref(false)
-
-// 打开AI对话框时检查限制
-const openAiDialog = async () => {
-  showAiDialog.value = true
-  try {
-    const res = await aiApi.checkLimit()
-    aiLimitReached.value = !res.data
-    if (aiLimitReached.value) {
-      aiChatHistory.value.push({ 
-        role: 'ai', 
-        content: '抱歉，您今天的AI使用次数已达上限（20次），请明天再试~' 
-      })
-    }
-  } catch (error) {
-    console.error('检查AI限制失败:', error)
-  }
-}
-
-const handleAiChat = async () => {
-  if (!aiInput.value.trim() || aiLoading.value) return
-  
-  // 检查AI使用限制
-  if (aiLimitReached.value) {
-    ElMessage.warning('您今天的AI使用次数已达上限（20次），请明天再试')
-    return
-  }
-  
-  const userMsg = aiInput.value.trim()
-  aiChatHistory.value.push({ role: 'user', content: userMsg })
-  aiInput.value = ''
-  aiLoading.value = true
-  
-  scrollToBottom()
-
-  try {
-    const res = await request.get('/ai/chat', { params: { message: userMsg } })
-    aiChatHistory.value.push({ role: 'ai', content: res.data })
-  } catch (error) {
-    aiChatHistory.value.push({ role: 'ai', content: '抱歉，小助手现在开小差了，请稍后再试。' })
-  } finally {
-    aiLoading.value = false
-    scrollToBottom()
-  }
-}
-
-const scrollToBottom = async () => {
-  await nextTick()
-  if (chatHistoryRef.value) {
-    chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight
-  }
-}
 let ws = null
 
 const fetchUnreadTotal = async () => {
@@ -323,23 +228,6 @@ const handleCommand = async (command) => {
   color: #409eff;
 }
 
-.ai-assistant-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  color: #606266;
-}
-
-.ai-assistant-container:hover {
-  background-color: #f5f7fa;
-  color: #67c23a;
-}
-
 .user-info {
   display: flex;
   align-items: center;
@@ -369,45 +257,4 @@ const handleCommand = async (command) => {
   padding: 24px 20px;
 }
 
-.ai-dialog :deep(.el-dialog__body) {
-  padding: 0;
-}
-
-.ai-chat-history {
-  height: 400px;
-  overflow-y: auto;
-  padding: 20px;
-  background-color: #f5f7fa;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.chat-bubble {
-  max-width: 80%;
-  padding: 10px 15px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  word-break: break-all;
-}
-
-.chat-bubble.ai {
-  align-self: flex-start;
-  background-color: #fff;
-  color: #333;
-  border-bottom-left-radius: 2px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.chat-bubble.user {
-  align-self: flex-end;
-  background-color: #409eff;
-  color: #fff;
-  border-bottom-right-radius: 2px;
-}
-
-.ai-input-wrapper {
-  padding: 10px 0;
-}
 </style>
