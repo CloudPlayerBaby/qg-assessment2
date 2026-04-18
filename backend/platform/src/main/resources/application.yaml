@@ -14,7 +14,7 @@ spring:
           connectiontimeout: 5000   # 5秒超时
           timeout: 5000
           writetimeout: 5000
-    test-connection: true   # 启动时测试连接
+    test-connection: false
 
   # ai
   ai:
@@ -31,6 +31,10 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+  cache:
+    redis:
+      cache-null-values: true
 
   #数据库
   datasource:

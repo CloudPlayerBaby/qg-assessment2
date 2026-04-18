@@ -10,6 +10,7 @@ import com.yuriyuri.constant.report.ReportStatus;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.found.FoundInfoRequest;
 import com.yuriyuri.entity.FoundItem;
+import com.yuriyuri.entity.LostItem;
 import com.yuriyuri.entity.Report;
 import com.yuriyuri.mapper.FoundMapper;
 import com.yuriyuri.mapper.ReportMapper;
@@ -56,7 +57,9 @@ public class FoundServiceImpl implements FoundService {
     @Override
     @Cacheable(value = "foundItem", key = "#id")
     public FoundItem getFoundInfoOne(Long id) {
-        return checkInfoExist(id);
+        LambdaQueryWrapper<FoundItem> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FoundItem::getId, id);
+        return foundMapper.selectOne(queryWrapper);
     }
 
     @Override
@@ -149,7 +152,7 @@ public class FoundServiceImpl implements FoundService {
     }
 
     @Override
-    @Transactional(rollbackFor =  Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void confirmItem(Long id, Long userId) {
         FoundItem foundItem = checkInfoExist(id);
 

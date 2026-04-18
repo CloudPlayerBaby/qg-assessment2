@@ -1,6 +1,7 @@
 package com.yuriyuri.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yuriyuri.common.BusinessException;
 import com.yuriyuri.common.Result;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.found.FoundInfoRequest;
@@ -45,6 +46,9 @@ public class FoundController {
     @Operation(summary = "用户查看某单个拾物信息的详情")
     public Result<FoundItem> getFoundInfoOne(@PathVariable Long id) {
         FoundItem foundInfoOne = foundService.getFoundInfoOne(id);
+        if (foundInfoOne == null) {
+            throw new BusinessException("失物信息不存在");
+        }
         return Result.success(foundInfoOne);
     }
 

@@ -38,6 +38,13 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!-- Kotlin 反射库（解决 springdoc 错误）-->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+            <version>1.9.22</version>
+        </dependency>
+
         <!-- 邮件 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

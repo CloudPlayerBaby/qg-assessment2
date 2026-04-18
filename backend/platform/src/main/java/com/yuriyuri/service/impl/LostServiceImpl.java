@@ -77,7 +77,9 @@ public class LostServiceImpl implements LostService {
     @Override
     @Cacheable(value = "lostItem", key = "#id") //加缓存
     public LostItem getLostInfoOne(Long id) {
-        return checkInfoExist(id);
+        LambdaQueryWrapper<LostItem> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(LostItem::getId, id);
+        return lostMapper.selectOne(queryWrapper);
     }
 
     /**

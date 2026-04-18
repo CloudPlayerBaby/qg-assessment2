@@ -1,6 +1,7 @@
 package com.yuriyuri.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yuriyuri.common.BusinessException;
 import com.yuriyuri.common.Result;
 import com.yuriyuri.dto.admin.ReportRequest;
 import com.yuriyuri.dto.lost.LostInfoRequest;
@@ -46,6 +47,9 @@ public class LostController {
     public Result<LostItem> getLostInfoOne(@PathVariable Long id){
         //查看失物详情，不需要是自己的
         LostItem lostInfoOne = lostService.getLostInfoOne(id);
+        if (lostInfoOne == null) {
+            throw new BusinessException("失物信息不存在");
+        }
         return Result.success(lostInfoOne);
     }
 
